@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {
   View,
   Text,
@@ -10,107 +10,91 @@ import {
   Platform,
   Alert,
   Pressable,
+  Animated,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
 import {DUMMY_CREDENTIALS, FlowType} from '../constants/credentials';
+import {getTheme, RADIUS, SPACING} from '../constants/colors';
 
-// ── Theme definitions ─────────────────────────────────────────────────────────
-const DARK = {
-  bg: '#111111',
-  surface: '#1C1C1C',
-  border: '#2A2A2A',
-  text: '#FFFFFF',
-  subText: '#AAAAAA',
-  muted: '#666666',
-  tabActiveBg: '#2E2E2E',
-  btnBg: '#FFFFFF',
-  btnText: '#111111',
-  label: '#888888',
-  hintBg: '#1C1C1C',
-  hintBorder: '#2A2A2A',
-  placeholder: '#555555',
-};
+// ── Per-flow content config ───────────────────────────────────────────────────
+const FLOW_CONFIG = {
+  lock: {
+    icon:         'lock'              as const,
+    idPlaceholder:'Enter your Lock ID',
+    passPh:       'Enter lock access key',
+  },
+  open: {
+    icon:         'lock-open-variant' as const,
+    idPlaceholder:'Enter your Open ID',
+    passPh:       'Enter open access key',
+  },
+} as const;
 
-const LIGHT = {
-  bg: '#F4F4F7',
-  surface: '#FFFFFF',
-  border: '#E0E0E8',
-  text: '#0F0F12',
-  subText: '#555566',
-  muted: '#9999AA',
-  tabActiveBg: '#ECECF4',
-  btnBg: '#111111',
-  btnText: '#FFFFFF',
-  label: '#888899',
-  hintBg: '#FFFFFF',
-  hintBorder: '#E0E0E8',
-  placeholder: '#AAAAAA',
-};
+// ── Props ─────────────────────────────────────────────────────────────────────
+interface Props {
+  isDark:         boolean;
+  onToggleTheme:  () => void;
+  onLoginSuccess: (flow: FlowType) => void;
+}
 
-// ── Lock icon (view-based) ────────────────────────────────────────────────────
-const LockIcon = ({color}: {color: string}) => (
-  <View style={lockIconStyles.wrapper}>
-    <View style={[lockIconStyles.shackle, {borderColor: color}]} />
-    <View style={[lockIconStyles.body, {backgroundColor: color}]}>
-      <View style={[lockIconStyles.inner, {backgroundColor: 'transparent'}]}>
-        <View style={lockIconStyles.ring} />
-        <View style={lockIconStyles.stem} />
-      </View>
+// ── Lock icon ─────────────────────────────────────────────────────────────────
+const LockIcon = ({color, isOpen}: {color: string; isOpen: boolean}) => (
+  <View style={lockSt.wrapper}>
+    <View style={[lockSt.shackle, {borderColor: color}, isOpen && lockSt.shackleOpen]} />
+    <View style={[lockSt.body, {backgroundColor: color}]}>
+      <View style={lockSt.keyhole} />
     </View>
   </View>
 );
-
-const lockIconStyles = StyleSheet.create({
-  wrapper: {alignItems: 'center', marginBottom: 18},
-  shackle: {
-    width: 26,
-    height: 18,
-    borderTopLeftRadius: 13,
-    borderTopRightRadius: 13,
-    borderWidth: 4,
-    borderBottomWidth: 0,
-    marginBottom: -2,
-  },
-  body: {
-    width: 50,
-    height: 40,
-    borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  inner: {alignItems: 'center'},
-  ring: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 2.5,
-    borderColor: 'rgba(0,0,0,0.25)',
-  },
-  stem: {
-    width: 3,
-    height: 6,
-    backgroundColor: 'rgba(0,0,0,0.25)',
-    borderRadius: 2,
-    marginTop: 1,
-  },
+const lockSt = StyleSheet.create({
+  wrapper:     {alignItems: 'center', marginBottom: 16},
+  shackle:     {width: 26, height: 18, borderTopLeftRadius: 13, borderTopRightRadius: 13,
+                 borderWidth: 4, borderBottomWidth: 0, marginBottom: -2},
+  shackleOpen: {transform: [{translateY: -7}]},
+  body:        {width: 50, height: 40, borderRadius: 9, alignItems: 'center', justifyContent: 'center'},
+  keyhole:     {width: 10, height: 10, borderRadius: 5, backgroundColor: 'rgba(0,0,0,0.2)'},
 });
 
 // ── Main component ────────────────────────────────────────────────────────────
-const LoginScreen: React.FC = () => {
-  const [isDark, setIsDark] = useState(true);
-  const C = isDark ? DARK : LIGHT;
+const LoginScreen: React.FC<Props> = ({isDark, onToggleTheme, onLoginSuccess}) => {
+  const C = getTheme(isDark);
 
-  const [activeTab, setActiveTab] = useState<FlowType>('lock');
-  const [uniqueId, setUniqueId] = useState('');
-  const [password, setPassword] = useState('');
+  const [activeTab,    setActiveTab]    = useState<FlowType>('lock');
+  const [uniqueId,     setUniqueId]     = useState('');
+  const [password,     setPassword]     = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading,      setLoading]      = useState(false);
+
+  const flow = FLOW_CONFIG[activeTab];
+
+  // ── Subtle shake on tab switch ─────────────────────────────────────────────
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+  const firstRender = useRef(true);
+
+  useEffect(() => {
+    if (firstRender.current) { firstRender.current = false; return; }
+    Animated.sequence([
+      Animated.timing(shakeAnim, {toValue: -2,  duration: 25, useNativeDriver: true}),
+      Animated.timing(shakeAnim, {toValue:  2,  duration: 25, useNativeDriver: true}),
+      Animated.timing(shakeAnim, {toValue: -1,  duration: 20, useNativeDriver: true}),
+      Animated.timing(shakeAnim, {toValue:  0,  duration: 20, useNativeDriver: true}),
+    ]).start();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+  const handleTabSwitch = (tab: FlowType) => {
+    if (tab === activeTab) {return;}
+    setActiveTab(tab);
+    setUniqueId('');
+    setPassword('');
+  };
 
   const handleLogin = () => {
     const cred = DUMMY_CREDENTIALS[activeTab];
     if (!uniqueId.trim() || !password.trim()) {
-      Alert.alert('Missing Fields', 'Please enter your Unique ID and Password.');
+      Alert.alert('Missing Fields', 'Please enter your Unique ID and Access Key.');
       return;
     }
     if (uniqueId !== cred.id || password !== cred.password) {
@@ -120,79 +104,62 @@ const LoginScreen: React.FC = () => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      Alert.alert(
-        'Access Granted',
-        `${activeTab === 'lock' ? 'Lock' : 'Open'} flow authenticated.`,
-      );
-    }, 1200);
+      onLoginSuccess(activeTab);
+    }, 1000);
   };
 
   const handleRequestOtp = () => {
     if (!uniqueId.trim()) {
-      Alert.alert('Unique ID Required', 'Please enter your Unique ID before requesting an OTP.');
+      Alert.alert('ID Required', 'Please enter your Unique ID before requesting an OTP.');
       return;
     }
-    Alert.alert('OTP Sent', `A one-time password has been dispatched to the number linked with ${uniqueId}.`);
+    Alert.alert('OTP Dispatched', `A one-time password was sent to the number linked with ${uniqueId}.`);
   };
 
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={[styles.safeArea, {backgroundColor: C.bg}]} edges={['top', 'bottom']}>
-      <StatusBar
-        barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor={C.bg}
-      />
+    <SafeAreaView style={[s.safeArea, {backgroundColor: C.bg}]} edges={['top', 'bottom']}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={C.bg} />
 
-      {/* ── Theme Toggle ── */}
-      <View style={styles.topBar}>
+      {/* theme toggle */}
+      <View style={s.topBar}>
         <TouchableOpacity
-          style={[styles.themeBtn, {backgroundColor: C.surface, borderColor: C.border}]}
-          onPress={() => setIsDark(v => !v)}
+          style={[s.themeBtn, {backgroundColor: C.surface, borderColor: C.border}]}
+          onPress={onToggleTheme}
           activeOpacity={0.8}>
-          <MaterialIcon
-            name={isDark ? 'weather-sunny' : 'weather-night'}
-            size={18}
-            color={C.subText}
-          />
+          <MaterialIcon name={isDark ? 'weather-sunny' : 'weather-night'} size={18} color={C.subText} />
         </TouchableOpacity>
       </View>
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-
-        <View style={styles.container}>
+      <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <Animated.View style={[s.container, {transform: [{translateX: shakeAnim}]}]}>
 
           {/* ── Logo ── */}
-          <View style={styles.logoSection}>
-            <LockIcon color={C.text} />
-            <Text style={[styles.logoText, {color: C.text}]}>
+          <View style={s.logoSection}>
+            <LockIcon color={C.text} isOpen={activeTab === 'open'} />
+            <Text style={[s.logoText, {color: C.text}]}>
               VAULT<Text style={{color: C.muted}}>X</Text>
             </Text>
-            <Text style={[styles.tagline, {color: C.muted}]}>
-              Secure Container Management
-            </Text>
+            <Text style={[s.tagline, {color: C.muted}]}>Secure Container Management</Text>
           </View>
 
-          {/* ── Flow Tabs ── */}
-          <View style={[styles.tabRow, {backgroundColor: C.surface, borderColor: C.border}]}>
+          {/* ── Tabs ── */}
+          <View style={[s.tabRow, {backgroundColor: C.surface, borderColor: C.border}]}>
             {(['lock', 'open'] as FlowType[]).map(tab => {
               const isActive = activeTab === tab;
               return (
                 <TouchableOpacity
                   key={tab}
                   activeOpacity={0.8}
-                  style={[
-                    styles.tab,
-                    isActive && [styles.tabActive, {backgroundColor: C.tabActiveBg}],
-                  ]}
-                  onPress={() => setActiveTab(tab)}>
+                  style={[s.tab, isActive && {backgroundColor: C.tabActiveBg}]}
+                  onPress={() => handleTabSwitch(tab)}>
                   <MaterialIcon
-                    name={tab === 'lock' ? 'lock' : 'lock-open-variant'}
+                    name={FLOW_CONFIG[tab].icon}
                     size={15}
                     color={isActive ? C.text : C.muted}
-                    style={styles.tabIcon}
+                    style={s.tabIcon}
                   />
-                  <Text style={[styles.tabText, {color: isActive ? C.text : C.muted}]}>
+                  <Text style={[s.tabText, {color: isActive ? C.text : C.muted}]}>
                     {tab.toUpperCase()}
                   </Text>
                 </TouchableOpacity>
@@ -201,20 +168,15 @@ const LoginScreen: React.FC = () => {
           </View>
 
           {/* ── Form ── */}
-          <View style={styles.card}>
-            <Text style={[styles.formLabel, {color: C.label}]}>UNIQUE ID LOGIN</Text>
+          <View style={s.card}>
+            <Text style={[s.formLabel, {color: C.label}]}>UNIQUE ID LOGIN</Text>
 
             {/* Unique ID */}
-            <View style={[styles.inputWrapper, {backgroundColor: C.surface, borderColor: C.border}]}>
-              <MaterialIcon
-                name="card-account-details-outline"
-                size={20}
-                color={C.muted}
-                style={styles.inputIcon}
-              />
+            <View style={[s.inputWrapper, {backgroundColor: C.surface, borderColor: C.border}]}>
+              <MaterialIcon name="card-account-details-outline" size={20} color={C.muted} style={s.inputIcon} />
               <TextInput
-                style={[styles.input, {color: C.text}]}
-                placeholder="Enter your Unique ID"
+                style={[s.input, {color: C.text}]}
+                placeholder={flow.idPlaceholder}
                 placeholderTextColor={C.placeholder}
                 value={uniqueId}
                 onChangeText={setUniqueId}
@@ -224,191 +186,87 @@ const LoginScreen: React.FC = () => {
             </View>
 
             {/* Password */}
-            <View style={[styles.inputWrapper, {backgroundColor: C.surface, borderColor: C.border}]}>
-              <MaterialIcon
-                name="key-outline"
-                size={20}
-                color={C.muted}
-                style={styles.inputIcon}
-              />
+            <View style={[s.inputWrapper, {backgroundColor: C.surface, borderColor: C.border}]}>
+              <MaterialIcon name="key-outline" size={20} color={C.muted} style={s.inputIcon} />
               <TextInput
-                style={[styles.input, styles.inputPr, {color: C.text}]}
-                placeholder="Enter your password"
+                style={[s.input, s.inputPr, {color: C.text}]}
+                placeholder={flow.passPh}
                 placeholderTextColor={C.placeholder}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
               />
-              <Pressable style={styles.eyeBtn} onPress={() => setShowPassword(v => !v)}>
-                <MaterialIcon
-                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                  size={20}
-                  color={C.muted}
-                />
+              <Pressable style={s.eyeBtn} onPress={() => setShowPassword(v => !v)}>
+                <MaterialIcon name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={C.muted} />
               </Pressable>
             </View>
 
-            {/* Request OTP */}
-            <TouchableOpacity
-              style={styles.otpRow}
-              onPress={handleRequestOtp}
-              activeOpacity={0.7}>
-              <MaterialIcon
-                name="message-badge-outline"
-                size={13}
-                color={C.muted}
-                style={{marginRight: 5}}
-              />
-              <Text style={[styles.otpText, {color: C.muted}]}>REQUEST OTP</Text>
+            {/* OTP */}
+            <TouchableOpacity style={s.otpRow} onPress={handleRequestOtp} activeOpacity={0.7}>
+              <MaterialIcon name="message-badge-outline" size={13} color={C.muted} style={{marginRight: 5}} />
+              <Text style={[s.otpText, {color: C.muted}]}>REQUEST OTP</Text>
             </TouchableOpacity>
           </View>
 
           {/* ── Login Button ── */}
           <TouchableOpacity
-            style={[
-              styles.loginBtn,
-              {backgroundColor: C.btnBg},
-              loading && styles.loginBtnDisabled,
-            ]}
+            style={[s.loginBtn, {backgroundColor: C.btnBg}, loading && s.loginBtnDisabled]}
             onPress={handleLogin}
             activeOpacity={0.85}
             disabled={loading}>
             {loading ? (
               <MaterialIcon name="loading" size={22} color={C.btnText} />
             ) : (
-              <Text style={[styles.loginBtnText, {color: C.btnText}]}>LOGIN</Text>
+              <>
+                <MaterialIcon name={flow.icon} size={17} color={C.btnText} style={{marginRight: 10}} />
+                <Text style={[s.loginBtnText, {color: C.btnText}]}>LOGIN</Text>
+              </>
             )}
           </TouchableOpacity>
 
-        </View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
 // ── Styles ────────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  flex: {flex: 1},
+const s = StyleSheet.create({
+  flex:     {flex: 1},
   safeArea: {flex: 1},
 
-  topBar: {
-    alignItems: 'flex-end',
-    paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 4,
-  },
-  themeBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
+  topBar:   {alignItems: 'flex-end', paddingHorizontal: 24, paddingTop: 8, paddingBottom: 4},
+  themeBtn: {width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 1},
 
-  container: {
-    flex: 1,
-    paddingHorizontal: 28,
-    justifyContent: 'center',
-    paddingBottom: 16,
-  },
+  container: {flex: 1, paddingHorizontal: 28, justifyContent: 'center', paddingBottom: 16},
 
-  // ── Logo ──
-  logoSection: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  logoText: {
-    fontSize: 34,
-    fontWeight: '800',
-    letterSpacing: 6,
-  },
-  tagline: {
-    fontSize: 11,
-    letterSpacing: 2,
-    marginTop: 4,
-    textTransform: 'uppercase',
-  },
+  // logo
+  logoSection: {alignItems: 'center', marginBottom: 36},
+  logoText:    {fontSize: 34, fontWeight: '800', letterSpacing: 6},
+  tagline:     {fontSize: 11, letterSpacing: 2, marginTop: 4, textTransform: 'uppercase'},
 
-  // ── Tabs ──
-  tabRow: {
-    flexDirection: 'row',
-    borderRadius: 50,
-    padding: 4,
-    marginBottom: 32,
-    borderWidth: 1,
-  },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    paddingVertical: 11,
-    borderRadius: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabActive: {},
-  tabIcon: {marginRight: 6},
-  tabText: {
-    fontSize: 13,
-    fontWeight: '600',
-    letterSpacing: 1.5,
-  },
+  // tabs
+  tabRow: {flexDirection: 'row', borderRadius: 50, padding: 4, marginBottom: 32, borderWidth: 1},
+  tab:    {flex: 1, flexDirection: 'row', paddingVertical: 11, borderRadius: 50, alignItems: 'center', justifyContent: 'center'},
+  tabIcon:{marginRight: 6},
+  tabText:{fontSize: 13, fontWeight: '600', letterSpacing: 1.5},
 
-  // ── Card ──
-  card: {marginBottom: 24},
-  formLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 2,
-    marginBottom: 16,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 12,
-    borderWidth: 1,
-    marginBottom: 12,
-    paddingHorizontal: 16,
-  },
-  inputIcon: {marginRight: 10},
-  input: {
-    flex: 1,
-    height: 52,
-    fontSize: 15,
-    letterSpacing: 0.5,
-  },
-  inputPr: {paddingRight: 8},
-  eyeBtn: {
-    padding: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  otpRow: {
-    flexDirection: 'row',
-    alignSelf: 'flex-end',
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  otpText: {
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 1.5,
-  },
+  // form
+  card:         {marginBottom: 24},
+  formLabel:    {fontSize: 11, fontWeight: '700', letterSpacing: 2, marginBottom: 16},
+  inputWrapper: {flexDirection: 'row', alignItems: 'center', borderRadius: 12, borderWidth: 1, marginBottom: 12, paddingHorizontal: 16},
+  inputIcon:    {marginRight: 10},
+  input:        {flex: 1, height: 52, fontSize: 15, letterSpacing: 0.4},
+  inputPr:      {paddingRight: 8},
+  eyeBtn:       {padding: 4, justifyContent: 'center', alignItems: 'center'},
+  otpRow:       {flexDirection: 'row', alignSelf: 'flex-end', alignItems: 'center', paddingVertical: 4},
+  otpText:      {fontSize: 11, fontWeight: '600', letterSpacing: 1.5},
 
-  // ── Login Button ──
-  loginBtn: {
-    borderRadius: 14,
-    paddingVertical: 17,
-    alignItems: 'center',
-    elevation: 4,
-  },
+  // button
+  loginBtn:         {flexDirection: 'row', borderRadius: 14, paddingVertical: 17, alignItems: 'center', justifyContent: 'center', elevation: 4},
   loginBtnDisabled: {opacity: 0.5},
-  loginBtnText: {
-    fontSize: 15,
-    fontWeight: '800',
-    letterSpacing: 3,
-  },
+  loginBtnText:     {fontSize: 14, fontWeight: '800', letterSpacing: 2.5},
 });
 
 export default LoginScreen;
