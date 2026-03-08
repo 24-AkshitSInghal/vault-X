@@ -18,17 +18,7 @@ interface Props {
   onLogout: () => void;
 }
 
-// ── Lock Icon ─────────────────────────────────────────────────────────────────
-const LockIcon = ({color}: {color: string}) => (
-  <View style={{alignItems: 'center', marginBottom: 6}}>
-    <View style={{width: 22, height: 16, borderTopLeftRadius: 11, borderTopRightRadius: 11,
-      borderWidth: 3.5, borderBottomWidth: 0, borderColor: color, marginBottom: -2}} />
-    <View style={{width: 42, height: 34, borderRadius: 8, backgroundColor: color,
-      alignItems: 'center', justifyContent: 'center'}}>
-      <View style={{width: 9, height: 9, borderRadius: 4.5, backgroundColor: 'rgba(0,0,0,0.2)'}} />
-    </View>
-  </View>
-);
+// ── Removed LockIcon block, using PNG image instead ─────────────────────────
 
 const ActionDashboardScreen: React.FC<Props> = ({isDark, onOpen, onLogout}) => {
   const C = getTheme(isDark);
@@ -41,8 +31,10 @@ const ActionDashboardScreen: React.FC<Props> = ({isDark, onOpen, onLogout}) => {
       <View style={s.topBar}>
         <View style={{width: 40}} />
         <View style={{alignItems: 'center'}}>
-          <LockIcon color={C.text} />
-          <Text style={[s.logo, {color: C.text}]}>VAULT<Text style={{color: C.muted}}>X</Text></Text>
+          <Image 
+            source={require('../../assets/tranperent-icon.png')} 
+             style={{ width: 200, height: 100, resizeMode: 'contain' }} 
+          />
         </View>
         <TouchableOpacity
           style={[s.iconBtn, {backgroundColor: C.surface, borderColor: C.border}]}

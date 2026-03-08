@@ -8,6 +8,7 @@ import {
   Alert,
   Modal,
   Pressable,
+  Image,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
@@ -32,22 +33,7 @@ const DEVICE = {
   connected:    true,
 };
 
-// ── Lock Icon (same as login for consistency) ──────────────────────────────────
-const LockIcon = ({color}: {color: string}) => (
-  <View style={lockSt.wrapper}>
-    <View style={[lockSt.shackle, {borderColor: color}]} />
-    <View style={[lockSt.body, {backgroundColor: color}]}>
-      <View style={lockSt.keyhole} />
-    </View>
-  </View>
-);
-const lockSt = StyleSheet.create({
-  wrapper:  {alignItems: 'center', marginBottom: 6},
-  shackle:  {width: 22, height: 16, borderTopLeftRadius: 11, borderTopRightRadius: 11,
-              borderWidth: 3.5, borderBottomWidth: 0, marginBottom: -2},
-  body:     {width: 42, height: 34, borderRadius: 8, alignItems: 'center', justifyContent: 'center'},
-  keyhole:  {width: 9, height: 9, borderRadius: 4.5, backgroundColor: 'rgba(0,0,0,0.2)'},
-});
+// ── Removed LockIcon block, using PNG image instead ─────────────────────────
 
 // ── Battery Bar ────────────────────────────────────────────────────────────────
 const BatteryBar = ({level, C}: {level: number; C: ReturnType<typeof getTheme>}) => (
@@ -103,10 +89,10 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
       <View style={s.topBar}>
         <View style={s.topBarLeft} />
         <View style={s.headerLogo}>
-          <LockIcon color={C.text} />
-          <Text style={[s.logoText, {color: C.text}]}>
-            VAULT<Text style={{color: C.muted}}>X</Text>
-          </Text>
+          <Image 
+            source={require('../../assets/tranperent-icon.png')} 
+            style={{ width: 200, height: 100, resizeMode: 'contain' }} 
+          />
         </View>
         <View style={s.topBarRight}>
           <TouchableOpacity

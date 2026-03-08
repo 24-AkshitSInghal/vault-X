@@ -1,7 +1,7 @@
 import React, {useRef, useEffect} from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  StatusBar, Animated,
+  StatusBar, Animated, Image,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
@@ -35,16 +35,7 @@ const dot = StyleSheet.create({
 });
 
 // ── Lock icon ─────────────────────────────────────────────────────────────────
-const LockIcon = ({color}: {color: string}) => (
-  <View style={{alignItems: 'center', marginBottom: 6}}>
-    <View style={{width: 22, height: 16, borderTopLeftRadius: 11, borderTopRightRadius: 11,
-      borderWidth: 3.5, borderBottomWidth: 0, borderColor: color, marginBottom: -2}} />
-    <View style={{width: 42, height: 34, borderRadius: 8, backgroundColor: color,
-      alignItems: 'center', justifyContent: 'center'}}>
-      <View style={{width: 9, height: 9, borderRadius: 4.5, backgroundColor: 'rgba(0,0,0,0.2)'}} />
-    </View>
-  </View>
-);
+// ── Removed LockIcon block, using PNG image instead ─────────────────────────
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface Props {
@@ -68,8 +59,10 @@ const LockWarningScreen: React.FC<Props> = ({isDark, flow, onConfirm, onReset, o
       <View style={s.topBar}>
         <View style={{width: 40}} />
         <View style={{alignItems: 'center'}}>
-          <LockIcon color={C.text} />
-          <Text style={[s.logo, {color: C.text}]}>VAULT<Text style={{color: C.muted}}>X</Text></Text>
+          <Image 
+            source={require('../../assets/tranperent-icon.png')} 
+             style={{ width: 200, height: 100, resizeMode: 'contain' }} 
+          />
         </View>
         <TouchableOpacity
           style={[s.iconBtn, {backgroundColor: C.surface, borderColor: C.border}]}

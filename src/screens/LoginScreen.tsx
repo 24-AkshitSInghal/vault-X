@@ -11,6 +11,7 @@ import {
   Alert,
   Pressable,
   Animated,
+  Image,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
@@ -38,23 +39,7 @@ interface Props {
   onLoginSuccess: (flow: FlowType) => void;
 }
 
-// ── Lock icon ─────────────────────────────────────────────────────────────────
-const LockIcon = ({color, isOpen}: {color: string; isOpen: boolean}) => (
-  <View style={lockSt.wrapper}>
-    <View style={[lockSt.shackle, {borderColor: color}, isOpen && lockSt.shackleOpen]} />
-    <View style={[lockSt.body, {backgroundColor: color}]}>
-      <View style={lockSt.keyhole} />
-    </View>
-  </View>
-);
-const lockSt = StyleSheet.create({
-  wrapper:     {alignItems: 'center', marginBottom: 16},
-  shackle:     {width: 26, height: 18, borderTopLeftRadius: 13, borderTopRightRadius: 13,
-                 borderWidth: 4, borderBottomWidth: 0, marginBottom: -2},
-  shackleOpen: {transform: [{translateY: -7}]},
-  body:        {width: 50, height: 40, borderRadius: 9, alignItems: 'center', justifyContent: 'center'},
-  keyhole:     {width: 10, height: 10, borderRadius: 5, backgroundColor: 'rgba(0,0,0,0.2)'},
-});
+// ── Removed LockIcon block, using PNG image instead ─────────────────────────
 
 // ── Main component ────────────────────────────────────────────────────────────
 const LoginScreen: React.FC<Props> = ({isDark, onToggleTheme, onLoginSuccess}) => {
@@ -136,10 +121,10 @@ const LoginScreen: React.FC<Props> = ({isDark, onToggleTheme, onLoginSuccess}) =
 
           {/* ── Logo ── */}
           <View style={s.logoSection}>
-            <LockIcon color={C.text} isOpen={activeTab === 'open'} />
-            <Text style={[s.logoText, {color: C.text}]}>
-              VAULT<Text style={{color: C.muted}}>X</Text>
-            </Text>
+            <Image 
+              source={require('../../assets/tranperent-icon.png')} 
+              style={{ width: 200, height: 120, resizeMode: 'contain', marginBottom: 8 }} 
+            />
             <Text style={[s.tagline, {color: C.muted}]}>Secure Container Management</Text>
           </View>
 
