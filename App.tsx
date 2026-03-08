@@ -8,9 +8,12 @@ import LoginScreen         from './src/screens/LoginScreen';
 import LockDashboardScreen from './src/screens/LockDashboardScreen';
 import LockProgressScreen  from './src/screens/LockProgressScreen';
 import LockWarningScreen   from './src/screens/LockWarningScreen';
+import ActionDashboardScreen from './src/screens/ActionDashboardScreen';
+import OpenWarningScreen   from './src/screens/OpenWarningScreen';
+import OpenProgressScreen  from './src/screens/OpenProgressScreen';
 import {FlowType}          from './src/constants/credentials';
 
-type Screen = 'login' | 'dashboard' | 'lockProgress' | 'lockWarning';
+type Screen = 'login' | 'dashboard' | 'lockProgress' | 'lockWarning' | 'actionDashboard' | 'openWarning' | 'openProgress';
 
 function App(): React.JSX.Element {
   const [isDark,     setIsDark]     = useState(true);
@@ -54,8 +57,34 @@ function App(): React.JSX.Element {
         <LockWarningScreen
           isDark={isDark}
           flow={flow}
-          onConfirm={() => setScreen('dashboard')}
+          onConfirm={() => setScreen('actionDashboard')}
           onReset={() => setScreen('dashboard')}
+          onLogout={() => setScreen('login')}
+        />
+      )}
+
+      {screen === 'actionDashboard' && (
+        <ActionDashboardScreen
+          isDark={isDark}
+          onOpen={() => setScreen('openWarning')}
+          onLogout={() => setScreen('login')}
+        />
+      )}
+
+      {screen === 'openWarning' && (
+        <OpenWarningScreen
+          isDark={isDark}
+          onYes={() => setScreen('openProgress')}
+          onNo={() => setScreen('actionDashboard')}
+          onLogout={() => setScreen('login')}
+        />
+      )}
+
+      {screen === 'openProgress' && (
+        <OpenProgressScreen
+          isDark={isDark}
+          selection={selection}
+          onComplete={() => setScreen('dashboard')}
           onLogout={() => setScreen('login')}
         />
       )}
