@@ -62,6 +62,7 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
   const [showBatteryWarning, setShowBatteryWarning] = useState(false);
   const [showConfirmModal, setShowConfirmModal]   = useState(false);
   const [resetModal,  setResetModal]  = useState(false);
+  const [logoutModal, setLogoutModal] = useState(false);
   
   const [toastMsg,  setToastMsg]  = useState<string | null>(null);
   const toastAnim = useRef(new Animated.Value(0)).current;
@@ -98,10 +99,7 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
   };
 
   const handleLogout = () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      {text: 'Cancel', style: 'cancel'},
-      {text: 'Sign Out', style: 'destructive', onPress: onLogout},
-    ]);
+    setLogoutModal(true);
   };
 
   return (
@@ -303,6 +301,36 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleReset} activeOpacity={0.7} style={{paddingVertical: 10, paddingHorizontal: 15}}>
                   <Text style={{color: C.text, fontSize: 13, fontWeight: '800', letterSpacing: 1}}>RESET</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── Logout Confirmation Modal ── */}
+      <Modal
+        visible={logoutModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLogoutModal(false)}>
+        <View style={s.modalOverlay}>
+          <View style={[s.modalCard, {backgroundColor: C.surface, borderColor: C.border}]}>
+            <View style={{backgroundColor: C.surfaceHigh, paddingVertical: 12, paddingHorizontal: 16, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg }}>
+              <Text style={[s.modalTitle, {color: C.text, marginBottom: 0}]}>Sign Out</Text>
+            </View>
+
+            <View style={{padding: SPACING.lg}}>
+              <Text style={{color: C.subText, fontSize: 13, lineHeight: 22, marginTop: 4, marginBottom: 20}}>
+                Are you sure you want to sign out?
+              </Text>
+
+              <View style={s.modalActions}>
+                <TouchableOpacity onPress={() => setLogoutModal(false)} activeOpacity={0.7} style={{paddingVertical: 10, paddingHorizontal: 15}}>
+                  <Text style={{color: C.muted, fontSize: 13, fontWeight: '700', letterSpacing: 1}}>CANCEL</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={onLogout} activeOpacity={0.7} style={{paddingVertical: 10, paddingHorizontal: 15}}>
+                  <Text style={{color: C.danger, fontSize: 13, fontWeight: '800', letterSpacing: 1}}>SIGN OUT</Text>
                 </TouchableOpacity>
               </View>
             </View>

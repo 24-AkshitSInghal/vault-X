@@ -52,7 +52,7 @@ const LoginScreen: React.FC<Props> = ({isDark, onToggleTheme, onLoginSuccess}) =
   const [showPassword, setShowPassword] = useState(false);
   const [loading,      setLoading]      = useState(false);
   const [otpModalVisible, setOtpModalVisible] = useState(false);
-  const [otpModalMode, setOtpModalMode] = useState<'error' | 'success'>('success');
+  const [otpModalMode, setOtpModalMode] = useState<'error' | 'success' | 'denied'>('success');
 
   const flow = FLOW_CONFIG[activeTab];
 
@@ -82,11 +82,13 @@ const LoginScreen: React.FC<Props> = ({isDark, onToggleTheme, onLoginSuccess}) =
   const handleLogin = () => {
     const cred = DUMMY_CREDENTIALS[activeTab];
     if (!uniqueId.trim() || !password.trim()) {
-      Alert.alert('Missing Fields', 'Please enter your Unique ID and Access Key.');
+      setOtpModalMode('error');
+      setOtpModalVisible(true);
       return;
     }
     if (uniqueId !== cred.id || password !== cred.password) {
-      Alert.alert('Access Denied', 'Invalid credentials. Please try again.');
+      setOtpModalMode('denied');
+      setOtpModalVisible(true);
       return;
     }
     setLoading(true);
@@ -225,24 +227,25 @@ const LoginScreen: React.FC<Props> = ({isDark, onToggleTheme, onLoginSuccess}) =
         animationType="fade"
         onRequestClose={() => setOtpModalVisible(false)}>
         <View style={s.modalOverlay}>
-          <View style={[s.modalCard, {backgroundColor: '#262626', borderColor: 'rgba(255,255,255,0.05)'}]}>
-            <View style={{backgroundColor: 'rgba(255,255,255,0.05)', paddingVertical: 12, paddingHorizontal: 16, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg }}>
+          <View style={[s.modalCard, {backgroundColor: C.surface, borderColor: C.border}]}>
+            <View style={{backgroundColor: C.surfaceHigh, paddingVertical: 12, paddingHorizontal: 16, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg }}>
               <Text style={[s.modalTitle, {color: C.text, marginBottom: 0}]}>
-                {otpModalMode === 'error' ? 'ID Required' : 'OTP Dispatched'}
+                {otpModalMode === 'error' ? 'Required' : otpModalMode === 'denied' ? 'Access Denied' : 'OTP Dispatched'}
               </Text>
             </View>
 
             <View style={{padding: SPACING.lg}}>
-              <Text style={{color: otpModalMode === 'error' ? C.danger : C.subText, fontSize: 13, lineHeight: 22, marginTop: 4, marginBottom: 20}}>
+              <Text style={{color: (otpModalMode === 'error' || otpModalMode === 'denied') ? C.danger : C.subText, fontSize: 13, lineHeight: 22, marginTop: 4, marginBottom: 20}}>
                 {otpModalMode === 'error' 
-                  ? 'Please enter your Unique ID before requesting an OTP.'
+                  ? 'Please enter your Unique ID and Access Key before logging in.'
+                  : otpModalMode === 'denied' ? 'The credentials you entered are incorrect. Please try again.'
                   : `A one-time password was sent to the number linked with ${uniqueId}.`}
               </Text>
 
               <View style={s.modalActions}>
                 <TouchableOpacity onPress={() => setOtpModalVisible(false)} activeOpacity={0.7} style={{paddingVertical: 10, paddingHorizontal: 15}}>
                   <Text style={{color: C.text, fontSize: 13, fontWeight: '800', letterSpacing: 1}}>
-                    {otpModalMode === 'error' ? 'OK' : 'DISMISS'}
+                    {otpModalMode === 'success' ? 'DISMISS' : 'OK'}
                   </Text>
                 </TouchableOpacity>
               </View>
