@@ -60,6 +60,8 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
   const C = getTheme(isDark);
   const [selection,   setSelection]   = useState<SelectionType>(null);
   const [showBatteryWarning, setShowBatteryWarning] = useState(false);
+  const [showConfirmModal, setShowConfirmModal]   = useState(false);
+  const [resetModal,  setResetModal]  = useState(false);
   
   const [toastMsg,  setToastMsg]  = useState<string | null>(null);
   const toastAnim = useRef(new Animated.Value(0)).current;
@@ -81,9 +83,16 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
 
   const handleReset = () => {
     setSelection(null);
+    setResetModal(false);
   };
 
   const handleProceed = () => {
+    if (!selection) {return;}
+    setShowConfirmModal(true);
+  };
+
+  const confirmProceed = () => {
+    setShowConfirmModal(false);
     if (!selection) {return;}
     onProceed(selection);
   };
@@ -174,7 +183,7 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
           <TouchableOpacity
             activeOpacity={0.85}
             style={[s.actionBtn, {backgroundColor: C.surface, borderColor: C.border}]}
-            onPress={handleReset}>
+            onPress={() => setResetModal(true)}>
             <MaterialIcon name="refresh" size={20} color={C.muted} style={s.actionIcon} />
             <Text style={[s.actionText, {color: C.muted}]}>RESET</Text>
           </TouchableOpacity>
@@ -239,6 +248,67 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
           </Animated.View>
         )}
       </View>
+
+      {/* ── Confirm Selection Popup ── */}
+      <Modal
+        visible={showConfirmModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowConfirmModal(false)}>
+        <View style={s.modalOverlay}>
+          <View style={[s.modalCard, {backgroundColor: '#262626', borderColor: 'rgba(255,255,255,0.05)'}]}>
+            <View style={{backgroundColor: 'rgba(255,255,255,0.05)', paddingVertical: 12, paddingHorizontal: 16, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg }}>
+              <Text style={[s.modalTitle, {color: C.text, marginBottom: 0}]}>Confirm Selection</Text>
+            </View>
+
+            <View style={{padding: SPACING.lg}}>
+              <Text style={{color: C.danger, fontSize: 13, fontWeight: '800', letterSpacing: 1}}>!WARNING!</Text>
+              <Text style={{color: C.subText, fontSize: 13, lineHeight: 22, marginTop: 4, marginBottom: 20}}>
+                Using TRAILER for CONTAINER will cause the doors not to lock properly, YOU may be held LIABLE
+              </Text>
+
+              <View style={s.modalActions}>
+                <TouchableOpacity onPress={() => setShowConfirmModal(false)} activeOpacity={0.7} style={{paddingVertical: 10, paddingHorizontal: 15}}>
+                  <Text style={{color: C.muted, fontSize: 13, fontWeight: '700', letterSpacing: 1}}>CANCEL</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={confirmProceed} activeOpacity={0.7} style={{paddingVertical: 10, paddingHorizontal: 15}}>
+                  <Text style={{color: C.text, fontSize: 13, fontWeight: '800', letterSpacing: 1}}>PROCEED</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── Reset Confirmation Modal ── */}
+      <Modal
+        visible={resetModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setResetModal(false)}>
+        <View style={s.modalOverlay}>
+          <View style={[s.modalCard, {backgroundColor: '#262626', borderColor: 'rgba(255,255,255,0.05)'}]}>
+            <View style={{backgroundColor: 'rgba(255,255,255,0.05)', paddingVertical: 12, paddingHorizontal: 16, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg }}>
+              <Text style={[s.modalTitle, {color: C.text, marginBottom: 0}]}>Reset Selection</Text>
+            </View>
+
+            <View style={{padding: SPACING.lg}}>
+              <Text style={{color: C.subText, fontSize: 13, lineHeight: 22, marginTop: 4, marginBottom: 20}}>
+                Are you sure you want to reset your selection?
+              </Text>
+
+              <View style={s.modalActions}>
+                <TouchableOpacity onPress={() => setResetModal(false)} activeOpacity={0.7} style={{paddingVertical: 10, paddingHorizontal: 15}}>
+                  <Text style={{color: C.muted, fontSize: 13, fontWeight: '700', letterSpacing: 1}}>CANCEL</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleReset} activeOpacity={0.7} style={{paddingVertical: 10, paddingHorizontal: 15}}>
+                  <Text style={{color: C.text, fontSize: 13, fontWeight: '800', letterSpacing: 1}}>RESET</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* ── Low Battery Warning Modal ── */}
       <Modal 
@@ -456,6 +526,28 @@ const s = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
   },
+
+  // confirm selection modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.xl,
+  },
+  modalCard: {
+    width: '100%',
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    padding: 0,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  modalTitle:   {fontSize: 15, fontWeight: '700', letterSpacing: 0.5},
+  modalActions: {flexDirection: 'row', justifyContent: 'flex-end', gap: SPACING.sm},
 });
 
 export default LockDashboardScreen;

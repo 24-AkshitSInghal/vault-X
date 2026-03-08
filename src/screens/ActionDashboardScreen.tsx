@@ -7,6 +7,7 @@ import {
   StatusBar,
   ScrollView,
   Image,
+  TextInput,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
@@ -14,14 +15,25 @@ import {getTheme, RADIUS, SPACING} from '../constants/colors';
 
 interface Props {
   isDark: boolean;
-  onOpen: () => void;
+  selection?: 'container' | 'trailer';
+  onOpen: (container: string, seal: string) => void;
   onLogout: () => void;
 }
 
 // ── Removed LockIcon block, using PNG image instead ─────────────────────────
 
-const ActionDashboardScreen: React.FC<Props> = ({isDark, onOpen, onLogout}) => {
+const ActionDashboardScreen: React.FC<Props> = ({isDark, selection = 'container', onOpen, onLogout}) => {
   const C = getTheme(isDark);
+  
+  const [containerNum, setContainerNum] = React.useState('TCLU9693193');
+  const [sealNum, setSealNum] = React.useState('');
+
+  const isDisabled = !containerNum.trim() || !sealNum.trim();
+
+  const handleConfirm = () => {
+    if (isDisabled) return;
+    onOpen(containerNum, sealNum);
+  };
 
   return (
     <SafeAreaView style={[s.safe, {backgroundColor: C.bg}]} edges={['top', 'bottom']}>
@@ -44,17 +56,31 @@ const ActionDashboardScreen: React.FC<Props> = ({isDark, onOpen, onLogout}) => {
       </View>
 
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
-        {/* Container Pill */}
+        {/* Selected Pill */}
         <View style={s.pillCenter}>
           <View style={[s.pill, {backgroundColor: C.surface, borderColor: C.border}]}>
-            <Text style={[s.pillText, {color: C.text}]}>CONTAINER</Text>
+            <Text style={[s.pillText, {color: C.text}]}>{selection.toUpperCase()}</Text>
           </View>
         </View>
 
-        {/* ID Block */}
-        <View style={[s.idBlock, {backgroundColor: C.surface, borderColor: C.border}]}>
-          <Text style={[s.idText, {color: C.text}]}>CXDU7782632</Text>
-        </View>
+        {/* Inputs */}
+        <TextInput
+          style={[s.inputBlock, {backgroundColor: C.surface, borderColor: C.border, color: C.text}]}
+          value={containerNum}
+          onChangeText={setContainerNum}
+          placeholder="Enter CONTAINER number"
+          placeholderTextColor={C.muted}
+          autoCapitalize="characters"
+        />
+
+        <TextInput
+          style={[s.inputBlock, {backgroundColor: C.surface, borderColor: C.border, color: C.text}]}
+          value={sealNum}
+          onChangeText={setSealNum}
+          placeholder="Enter SEAL number"
+          placeholderTextColor={C.muted}
+          autoCapitalize="characters"
+        />
 
         {/* Camera Box with actual image */}
         <View style={[s.cameraBox, {backgroundColor: C.surfaceHigh, borderColor: C.border, overflow: 'hidden'}]}>
@@ -89,13 +115,24 @@ const ActionDashboardScreen: React.FC<Props> = ({isDark, onOpen, onLogout}) => {
           </View>
         </View>
 
-        {/* Status Indicator */}
-        <View style={[s.btn, {backgroundColor: 'transparent', borderColor: 'transparent', marginBottom: SPACING.md, elevation: 0}]}>
-          <MaterialIcon name="check-circle-outline" size={18} color={C.text} style={{marginRight: 8}} />
-          <Text style={[s.btnText, {color: C.text}]}>CONFIRM</Text>
-        </View>
+        {/* Confirm Button */}
+        <TouchableOpacity 
+          style={[s.btn, {backgroundColor: C.surface, borderColor: C.border, opacity: isDisabled ? 0.4 : 1}]}
+          onPress={handleConfirm}
+          activeOpacity={0.8}
+          disabled={isDisabled}
+        >
+          <MaterialIcon name="check-circle-outline" size={18} color={isDisabled ? C.muted : C.text} style={{marginRight: 8}} />
+          <Text style={[s.btnText, {color: isDisabled ? C.muted : C.text}]}>CONFIRM</Text>
+        </TouchableOpacity>
 
-        <TouchableOpacity style={[s.btn, {backgroundColor: C.text, elevation: 4}]} onPress={onOpen} activeOpacity={0.85}>
+        {/* Open Button */}
+        <TouchableOpacity 
+          style={[s.btn, {backgroundColor: C.text, elevation: isDisabled ? 0 : 4, opacity: isDisabled ? 0.4 : 1}]} 
+          onPress={handleConfirm} 
+          activeOpacity={0.85}
+          disabled={isDisabled}
+        >
           <Text style={[s.btnText, {color: C.bg}]}>OPEN</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -117,8 +154,17 @@ const s = StyleSheet.create({
   pill: {paddingHorizontal: SPACING.lg, paddingVertical: 8, borderRadius: RADIUS.pill, borderWidth: 1},
   pillText: {fontSize: 12, fontWeight: '700', letterSpacing: 1},
 
-  idBlock: {alignItems: 'center', paddingVertical: 14, borderRadius: RADIUS.md, borderWidth: 1, marginBottom: SPACING.lg},
-  idText: {fontSize: 16, fontWeight: '800', letterSpacing: 2},
+  inputBlock: {
+    height: 48,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    marginBottom: SPACING.lg,
+    paddingHorizontal: SPACING.lg,
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 2,
+    textAlign: 'center',
+  },
 
   cameraBox: {height: 160, borderRadius: RADIUS.lg, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginBottom: SPACING.lg},
   cameraImage: {width: '100%', height: '100%'},

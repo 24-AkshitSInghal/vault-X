@@ -20,6 +20,8 @@ function App(): React.JSX.Element {
   const [screen,     setScreen]     = useState<Screen>('login');
   const [flow,       setFlow]       = useState<FlowType>('lock');
   const [selection,  setSelection]  = useState<'container' | 'trailer'>('container');
+  const [containerNum, setContainerNum] = useState<string>('');
+  const [sealNum,      setSealNum]      = useState<string>('');
 
   const toggleTheme = () => setIsDark(v => !v);
 
@@ -66,7 +68,12 @@ function App(): React.JSX.Element {
       {screen === 'actionDashboard' && (
         <ActionDashboardScreen
           isDark={isDark}
-          onOpen={() => setScreen('openWarning')}
+          selection={selection}
+          onOpen={(container, seal) => {
+            setContainerNum(container);
+            setSealNum(seal);
+            setScreen('openProgress');
+          }}
           onLogout={() => setScreen('login')}
         />
       )}
@@ -84,6 +91,8 @@ function App(): React.JSX.Element {
         <OpenProgressScreen
           isDark={isDark}
           selection={selection}
+          containerNum={containerNum}
+          sealNum={sealNum}
           onComplete={() => setScreen('dashboard')}
           onLogout={() => setScreen('login')}
         />
