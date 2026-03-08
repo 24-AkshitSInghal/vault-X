@@ -12,6 +12,7 @@ import {
   Pressable,
   Animated,
   Image,
+  Modal,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
@@ -50,6 +51,8 @@ const LoginScreen: React.FC<Props> = ({isDark, onToggleTheme, onLoginSuccess}) =
   const [password,     setPassword]     = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading,      setLoading]      = useState(false);
+  const [otpModalVisible, setOtpModalVisible] = useState(false);
+  const [otpModalMode, setOtpModalMode] = useState<'error' | 'success'>('success');
 
   const flow = FLOW_CONFIG[activeTab];
 
@@ -95,10 +98,12 @@ const LoginScreen: React.FC<Props> = ({isDark, onToggleTheme, onLoginSuccess}) =
 
   const handleRequestOtp = () => {
     if (!uniqueId.trim()) {
-      Alert.alert('ID Required', 'Please enter your Unique ID before requesting an OTP.');
+      setOtpModalMode('error');
+      setOtpModalVisible(true);
       return;
     }
-    Alert.alert('OTP Dispatched', `A one-time password was sent to the number linked with ${uniqueId}.`);
+    setOtpModalMode('success');
+    setOtpModalVisible(true);
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -122,8 +127,8 @@ const LoginScreen: React.FC<Props> = ({isDark, onToggleTheme, onLoginSuccess}) =
           {/* ── Logo ── */}
           <View style={s.logoSection}>
             <Image 
-              source={require('../../assets/tranperent-icon.png')} 
-              style={{ width: 200, height: 120, resizeMode: 'contain', marginBottom: 8 }} 
+              source={isDark ? require('../../assets/white-logo.png') : require('../../assets/black-logo.png')} 
+              style={{ width: 220, height: 150, resizeMode: 'contain', marginBottom: 8 }} 
             />
             <Text style={[s.tagline, {color: C.muted}]}>Secure Container Management</Text>
           </View>
@@ -212,6 +217,39 @@ const LoginScreen: React.FC<Props> = ({isDark, onToggleTheme, onLoginSuccess}) =
 
         </Animated.View>
       </KeyboardAvoidingView>
+
+      {/* ── OTP Modal ── */}
+      <Modal
+        visible={otpModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOtpModalVisible(false)}>
+        <View style={s.modalOverlay}>
+          <View style={[s.modalCard, {backgroundColor: '#262626', borderColor: 'rgba(255,255,255,0.05)'}]}>
+            <View style={{backgroundColor: 'rgba(255,255,255,0.05)', paddingVertical: 12, paddingHorizontal: 16, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg }}>
+              <Text style={[s.modalTitle, {color: C.text, marginBottom: 0}]}>
+                {otpModalMode === 'error' ? 'ID Required' : 'OTP Dispatched'}
+              </Text>
+            </View>
+
+            <View style={{padding: SPACING.lg}}>
+              <Text style={{color: otpModalMode === 'error' ? C.danger : C.subText, fontSize: 13, lineHeight: 22, marginTop: 4, marginBottom: 20}}>
+                {otpModalMode === 'error' 
+                  ? 'Please enter your Unique ID before requesting an OTP.'
+                  : `A one-time password was sent to the number linked with ${uniqueId}.`}
+              </Text>
+
+              <View style={s.modalActions}>
+                <TouchableOpacity onPress={() => setOtpModalVisible(false)} activeOpacity={0.7} style={{paddingVertical: 10, paddingHorizontal: 15}}>
+                  <Text style={{color: C.text, fontSize: 13, fontWeight: '800', letterSpacing: 1}}>
+                    {otpModalMode === 'error' ? 'OK' : 'DISMISS'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -248,10 +286,31 @@ const s = StyleSheet.create({
   otpRow:       {flexDirection: 'row', alignSelf: 'flex-end', alignItems: 'center', paddingVertical: 4},
   otpText:      {fontSize: 11, fontWeight: '600', letterSpacing: 1.5},
 
-  // button
   loginBtn:         {flexDirection: 'row', borderRadius: 14, paddingVertical: 17, alignItems: 'center', justifyContent: 'center', elevation: 4},
   loginBtnDisabled: {opacity: 0.5},
   loginBtnText:     {fontSize: 14, fontWeight: '800', letterSpacing: 2.5},
+
+  // confirm selection modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.xl,
+  },
+  modalCard: {
+    width: '100%',
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    padding: 0,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  modalTitle:   {fontSize: 15, fontWeight: '700', letterSpacing: 0.5},
+  modalActions: {flexDirection: 'row', justifyContent: 'flex-end', gap: SPACING.sm},
 });
 
 export default LoginScreen;

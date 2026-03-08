@@ -31,7 +31,7 @@ const OpenWarningScreen: React.FC<Props> = ({isDark, onYes, onNo, onLogout}) => 
         <View style={{width: 40}} />
         <View style={{alignItems: 'center'}}>
           <Image 
-            source={require('../../assets/tranperent-icon.png')} 
+            source={isDark ? require('../../assets/white-logo.png') : require('../../assets/black-logo.png')} 
             style={{ width: 200, height: 100, resizeMode: 'contain' }} 
           />
         </View>

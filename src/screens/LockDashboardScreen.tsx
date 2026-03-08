@@ -113,7 +113,7 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
         <View style={s.topBarLeft} />
         <View style={s.headerLogo}>
           <Image 
-            source={require('../../assets/tranperent-icon.png')} 
+            source={isDark ? require('../../assets/white-logo.png') : require('../../assets/black-logo.png')} 
             style={{ width: 200, height: 100, resizeMode: 'contain' }} 
           />
         </View>
@@ -256,8 +256,8 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
         animationType="fade"
         onRequestClose={() => setShowConfirmModal(false)}>
         <View style={s.modalOverlay}>
-          <View style={[s.modalCard, {backgroundColor: '#262626', borderColor: 'rgba(255,255,255,0.05)'}]}>
-            <View style={{backgroundColor: 'rgba(255,255,255,0.05)', paddingVertical: 12, paddingHorizontal: 16, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg }}>
+          <View style={[s.modalCard, {backgroundColor: C.surface, borderColor: C.border}]}>
+            <View style={{backgroundColor: C.surfaceHigh, paddingVertical: 12, paddingHorizontal: 16, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg }}>
               <Text style={[s.modalTitle, {color: C.text, marginBottom: 0}]}>Confirm Selection</Text>
             </View>
 
@@ -287,8 +287,8 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
         animationType="fade"
         onRequestClose={() => setResetModal(false)}>
         <View style={s.modalOverlay}>
-          <View style={[s.modalCard, {backgroundColor: '#262626', borderColor: 'rgba(255,255,255,0.05)'}]}>
-            <View style={{backgroundColor: 'rgba(255,255,255,0.05)', paddingVertical: 12, paddingHorizontal: 16, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg }}>
+          <View style={[s.modalCard, {backgroundColor: C.surface, borderColor: C.border}]}>
+            <View style={{backgroundColor: C.surfaceHigh, paddingVertical: 12, paddingHorizontal: 16, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg }}>
               <Text style={[s.modalTitle, {color: C.text, marginBottom: 0}]}>Reset Selection</Text>
             </View>
 
@@ -318,14 +318,14 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
         onRequestClose={() => setShowBatteryWarning(false)}
       >
         <SafeAreaView 
-          style={[s.safeArea, {backgroundColor: isDark ? '#1C1C1E' : '#EAE6F5'}]} 
+          style={[s.safeArea, {backgroundColor: C.bg}]} 
           edges={['top', 'bottom']}
         >
           <Pressable style={s.modalWarnWrap} onPress={() => setShowBatteryWarning(false)}>
             
-            <View style={s.warnLogoBox}>
+            <View style={[s.warnLogoBox, {backgroundColor: C.surfaceHigh}]}>
                <Image 
-                 source={require('../../assets/tranperent-icon.png')} 
+                 source={isDark ? require('../../assets/white-logo.png') : require('../../assets/black-logo.png')} 
                  style={{ width: 200  , height: 150, resizeMode: 'contain' }} 
                />
                {/* <MaterialIcon name="lock-alert" size={45} color={isDark ? '#FFFFFF' : '#000000'} style={{marginLeft: 15}} /> */}
@@ -450,7 +450,6 @@ const s = StyleSheet.create({
   warnLogoBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#262626',
     paddingVertical: SPACING.lg,
     paddingHorizontal: SPACING.xl,
     borderRadius: RADIUS.lg,

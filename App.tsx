@@ -11,9 +11,10 @@ import LockWarningScreen   from './src/screens/LockWarningScreen';
 import ActionDashboardScreen from './src/screens/ActionDashboardScreen';
 import OpenWarningScreen   from './src/screens/OpenWarningScreen';
 import OpenProgressScreen  from './src/screens/OpenProgressScreen';
+import FinalScreen         from './src/screens/FinalScreen';
 import {FlowType}          from './src/constants/credentials';
 
-type Screen = 'login' | 'dashboard' | 'lockProgress' | 'lockWarning' | 'actionDashboard' | 'openWarning' | 'openProgress';
+type Screen = 'login' | 'dashboard' | 'lockProgress' | 'lockWarning' | 'actionDashboard' | 'openWarning' | 'openProgress' | 'final';
 
 function App(): React.JSX.Element {
   const [isDark,     setIsDark]     = useState(true);
@@ -31,7 +32,14 @@ function App(): React.JSX.Element {
         <LoginScreen
           isDark={isDark}
           onToggleTheme={toggleTheme}
-          onLoginSuccess={f => { setFlow(f); setScreen('dashboard'); }}
+          onLoginSuccess={f => { 
+            setFlow(f); 
+            if (f === 'open') {
+              setScreen('actionDashboard');
+            } else {
+              setScreen('dashboard'); 
+            }
+          }}
         />
       )}
 
@@ -68,11 +76,16 @@ function App(): React.JSX.Element {
       {screen === 'actionDashboard' && (
         <ActionDashboardScreen
           isDark={isDark}
+          flow={flow}
           selection={selection}
           onOpen={(container, seal) => {
             setContainerNum(container);
             setSealNum(seal);
-            setScreen('openProgress');
+            if (flow === 'open') {
+              setScreen('openWarning');
+            } else {
+              setScreen('final');
+            }
           }}
           onLogout={() => setScreen('login')}
         />
@@ -91,9 +104,16 @@ function App(): React.JSX.Element {
         <OpenProgressScreen
           isDark={isDark}
           selection={selection}
+          onComplete={() => setScreen('final')}
+          onLogout={() => setScreen('login')}
+        />
+      )}
+
+      {screen === 'final' && (
+        <FinalScreen
+          isDark={isDark}
           containerNum={containerNum}
           sealNum={sealNum}
-          onComplete={() => setScreen('dashboard')}
           onLogout={() => setScreen('login')}
         />
       )}

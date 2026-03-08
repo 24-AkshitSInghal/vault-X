@@ -15,6 +15,7 @@ import {getTheme, RADIUS, SPACING} from '../constants/colors';
 
 interface Props {
   isDark: boolean;
+  flow: 'lock' | 'open';
   selection?: 'container' | 'trailer';
   onOpen: (container: string, seal: string) => void;
   onLogout: () => void;
@@ -22,7 +23,7 @@ interface Props {
 
 // ── Removed LockIcon block, using PNG image instead ─────────────────────────
 
-const ActionDashboardScreen: React.FC<Props> = ({isDark, selection = 'container', onOpen, onLogout}) => {
+const ActionDashboardScreen: React.FC<Props> = ({isDark, flow, selection = 'container', onOpen, onLogout}) => {
   const C = getTheme(isDark);
   
   const [containerNum, setContainerNum] = React.useState('TCLU9693193');
@@ -44,7 +45,7 @@ const ActionDashboardScreen: React.FC<Props> = ({isDark, selection = 'container'
         <View style={{width: 40}} />
         <View style={{alignItems: 'center'}}>
           <Image 
-            source={require('../../assets/tranperent-icon.png')} 
+            source={isDark ? require('../../assets/white-logo.png') : require('../../assets/black-logo.png')} 
              style={{ width: 200, height: 100, resizeMode: 'contain' }} 
           />
         </View>
@@ -115,16 +116,18 @@ const ActionDashboardScreen: React.FC<Props> = ({isDark, selection = 'container'
           </View>
         </View>
 
-        {/* Confirm Button */}
-        <TouchableOpacity 
-          style={[s.btn, {backgroundColor: C.surface, borderColor: C.border, opacity: isDisabled ? 0.4 : 1}]}
-          onPress={handleConfirm}
-          activeOpacity={0.8}
-          disabled={isDisabled}
-        >
-          <MaterialIcon name="check-circle-outline" size={18} color={isDisabled ? C.muted : C.text} style={{marginRight: 8}} />
-          <Text style={[s.btnText, {color: isDisabled ? C.muted : C.text}]}>CONFIRM</Text>
-        </TouchableOpacity>
+        {/* Confirm Button (Only in Flow 1) */}
+        {flow === 'lock' && (
+          <TouchableOpacity 
+            style={[s.btn, {backgroundColor: C.surface, borderColor: C.border, opacity: isDisabled ? 0.4 : 1}]}
+            onPress={handleConfirm}
+            activeOpacity={0.8}
+            disabled={isDisabled}
+          >
+            <MaterialIcon name="check-circle-outline" size={18} color={isDisabled ? C.muted : C.text} style={{marginRight: 8}} />
+            <Text style={[s.btnText, {color: isDisabled ? C.muted : C.text}]}>CONFIRM</Text>
+          </TouchableOpacity>
+        )}
 
         {/* Open Button */}
         <TouchableOpacity 
