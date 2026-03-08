@@ -23,13 +23,13 @@ import {getTheme, RADIUS, SPACING} from '../constants/colors';
 const FLOW_CONFIG = {
   lock: {
     icon:         'lock'              as const,
-    idPlaceholder:'Enter your Lock ID',
-    passPh:       'Enter lock access key',
+    idPlaceholder:'Enter your login ID',
+    passPh:       'Enter your password',
   },
   open: {
     icon:         'lock-open-variant' as const,
-    idPlaceholder:'Enter your Open ID',
-    passPh:       'Enter open access key',
+    idPlaceholder:'Enter your login ID',
+    passPh:       'Enter your password',
   },
 } as const;
 
@@ -172,7 +172,7 @@ const LoginScreen: React.FC<Props> = ({isDark, onToggleTheme, onLoginSuccess}) =
                 placeholderTextColor={C.placeholder}
                 value={uniqueId}
                 onChangeText={setUniqueId}
-                autoCapitalize="characters"
+                autoCapitalize="none"
                 autoCorrect={false}
               />
             </View>

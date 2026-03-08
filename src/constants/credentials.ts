@@ -6,22 +6,22 @@
  */
 
 export const DUMMY_CREDENTIALS = {
-//   lock: {
-//     id: 'vaultx test',
-//     password: 'VxT',
-//   },
-//   open: {
-//     id: 'vaultx test',
-//     password: 'VxT',
-//   },
   lock: {
-    id: '123',
-    password: '123',
+    id: 'vaultx test',
+    password: 'VxT',
   },
   open: {
-    id: '123',
-    password: '123',
+    id: 'vaultx test',
+    password: 'VxT',
   },
+  // lock: {
+  //   id: '123',
+  //   password: '123',
+  // },
+  // open: {
+  //   id: '123',
+  //   password: '123',
+  // },
 } as const;
 
 export type FlowType = keyof typeof DUMMY_CREDENTIALS;
