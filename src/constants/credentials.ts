@@ -7,12 +7,12 @@
 
 export const DUMMY_CREDENTIALS = {
   lock: {
-    id: '001',
-    password: 'lock@123',
+    id: 'vaultx test',
+    password: 'VxT',
   },
   open: {
-    id: '001',
-    password: 'open@123',
+    id: 'vaultx test',
+    password: 'VxT',
   },
 } as const;
 
