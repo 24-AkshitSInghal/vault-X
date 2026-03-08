@@ -12,6 +12,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
 import {getTheme, RADIUS, SPACING} from '../constants/colors';
 import {FlowType} from '../constants/credentials';
+import Svg, {Circle} from 'react-native-svg';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface Props {
@@ -30,32 +31,41 @@ const STEPS = [
   {id: 'final', label: 'Synchronizing Cloud Vault', threshold: 100},
 ];
 
-// ── Segmented Progress Ring ────────────────────────────────────────────────────
-// Glitch-free implementation using individual segments
-const SegmentedRing = ({progress, C}: {progress: number; C: any}) => {
-  const TOTAL_SEGMENTS = 36;
-  const segments = Array.from({length: TOTAL_SEGMENTS});
+// ── Circular Progress Ring ─────────────────────────────────────────────────────
+const CircularProgress = ({progress, C}: {progress: number; C: any}) => {
+  const size = 200;
+  const strokeWidth = 8;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
 
   return (
     <View style={ringSt.container}>
-      <View style={ringSt.ringBase}>
-        {segments.map((_, i) => {
-          const isActive = (i / TOTAL_SEGMENTS) * 100 < progress;
-          return (
-            <View
-              key={i}
-              style={[
-                ringSt.segment,
-                {
-                  transform: [{rotate: `${i * (360 / TOTAL_SEGMENTS)}deg`}],
-                  backgroundColor: isActive ? '#10B981' : C.border,
-                  opacity: isActive ? 1 : 0.4,
-                },
-              ]}
-            />
-          );
-        })}
-      </View>
+      <Svg width={size} height={size}>
+        {/* Background Track */}
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={C.border}
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          strokeOpacity={0.3}
+        />
+        {/* Active Progress */}
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="#10B981"
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
       <View style={ringSt.center}>
         <Text style={[ringSt.percent, {color: C.text}]}>{Math.round(progress)}</Text>
         <Text style={[ringSt.percentSymbol, {color: C.muted}]}>%</Text>
@@ -207,7 +217,7 @@ const LockProgressScreen: React.FC<Props> = ({isDark, flow, selection, onWarning
 
       <View style={s.container}>
         <View style={s.ringWrapper}>
-          <SegmentedRing progress={progress} C={C} />
+          <CircularProgress progress={progress} C={C} />
           <Text style={[s.subLabel, {color: C.muted}]}>
             {flow.toUpperCase()}ING {selection.toUpperCase()}...
           </Text>
