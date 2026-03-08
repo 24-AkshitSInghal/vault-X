@@ -21,7 +21,7 @@ interface Props {
 }
 
 const STEPS = [
-  {id: 'init', label: 'Verifying container ID', threshold: 15},
+  {id: 'init', label: 'Verifying Security Protocol', threshold: 15},
   {id: 'comm', label: 'Checking winch connection', threshold: 35},
   {id: 'mech', label: 'Disengaging lock mechanism', threshold: 60},
   {id: 'door', label: 'Releasing doors', threshold: 85},
@@ -30,7 +30,7 @@ const STEPS = [
 
 // ── Circular Progress Ring ─────────────────────────────────────────────────────
 const CircularProgress = ({progress, C}: {progress: number; C: any}) => {
-  const size = 200;
+  const size = 160;
   const strokeWidth = 8;
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
@@ -72,12 +72,12 @@ const CircularProgress = ({progress, C}: {progress: number; C: any}) => {
 };
 
 const ringSt = StyleSheet.create({
-  container: {width: 200, height: 200, alignItems: 'center', justifyContent: 'center'},
-  ringBase: {width: 200, height: 200, alignItems: 'center', justifyContent: 'center'},
+  container: {width: 160, height: 160, alignItems: 'center', justifyContent: 'center'},
+  ringBase: {width: 160, height: 160, alignItems: 'center', justifyContent: 'center'},
   segment: {position: 'absolute', width: 6, height: 18, borderRadius: 3, top: 5},
   center: {position: 'absolute', flexDirection: 'row', alignItems: 'baseline'},
-  percent: {fontSize: 54, fontWeight: '900'},
-  percentSymbol: {fontSize: 20, fontWeight: '700', marginLeft: 2},
+  percent: {fontSize: 44, fontWeight: '900'},
+  percentSymbol: {fontSize: 16, fontWeight: '700', marginLeft: 2},
 });
 
 // ── Step Row ──────────────────────────────────────────────────────────────────
@@ -118,7 +118,7 @@ const StepRow = ({label, status, timestamp, percent, C}: any) => {
 };
 
 const sr = StyleSheet.create({
-  container: {flexDirection: 'row', padding: 16, borderRadius: 16, borderWidth: 1, marginBottom: 10, alignItems: 'center'},
+  container: {flexDirection: 'row', padding: 12, borderRadius: 16, borderWidth: 1, marginBottom: 8, alignItems: 'center'},
   indicator: {width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 16},
   dot: {width: 8, height: 8, borderRadius: 4},
   content: {flex: 1},
@@ -133,6 +133,7 @@ const OpenProgressScreen: React.FC<Props> = ({isDark, selection, onComplete, onL
   const C = getTheme(isDark);
   const [progress, setProgress] = useState(0);
   const [stepData, setStepData] = useState<any[]>([]);
+  const [showSuccess, setShowSuccess] = useState(false);
   const hasCompleted = useRef(false);
 
   const getTimestamp = () => {
@@ -161,7 +162,8 @@ const OpenProgressScreen: React.FC<Props> = ({isDark, selection, onComplete, onL
         if (next >= 100 && !hasCompleted.current) {
           hasCompleted.current = true;
           clearInterval(interval);
-          setTimeout(onComplete, 1200);
+          setShowSuccess(true);
+          setTimeout(onComplete, 2500);
         }
 
         return next;
@@ -179,42 +181,44 @@ const OpenProgressScreen: React.FC<Props> = ({isDark, selection, onComplete, onL
 
       <View style={s.header}>
         <View style={{width: 40}} />
-        <View style={s.logoWrapper}>
-          <Image 
-            source={isDark ? require('../../assets/white-logo.png') : require('../../assets/black-logo.png')} 
-            style={{ width: 140, height: 100, resizeMode: 'contain' }} 
-          />
-        </View>
-        <TouchableOpacity
-          style={[s.iconBtn]}
-          activeOpacity={0.8}>
-        </TouchableOpacity>
+        <View style={{flex: 1}} />
+        <View style={{width: 40}} />
       </View>
 
       <View style={s.container}>
-        <View style={s.ringWrapper}>
-          <CircularProgress progress={progress} C={C} />
-          <Text style={[s.statusTitle, {color: C.text}]}>Disengaging Lock...</Text>
-          <Text style={[s.subLabel, {color: C.muted}]}>Lock mechanism is being released</Text>
-        </View>
+        {showSuccess ? (
+          <View style={s.successBox}>
+            <MaterialIcon name="check-circle" size={80} color="#10B981" />
+            <Text style={[s.successText, {color: C.text}]}>DOORS RELEASED</Text>
+            <Text style={[s.successSub, {color: C.muted}]}>Unlocking sequence complete</Text>
+          </View>
+        ) : (
+          <>
+            <View style={s.ringWrapper}>
+              <CircularProgress progress={progress} C={C} />
+              <Text style={[s.statusTitle, {color: C.text}]}>Disengaging Lock...</Text>
+              <Text style={[s.subLabel, {color: C.muted}]}>Lock mechanism is being released</Text>
+            </View>
 
-        <View style={s.stepsList}>
-          {STEPS.map((step, idx) => {
-            const data = stepData.find(d => d.id === step.id);
-            const status = progress >= step.threshold ? 'done' : idx === activeStepIdx ? 'active' : 'pending';
-            
-            return (
-              <StepRow
-                key={step.id}
-                label={step.label}
-                status={status}
-                timestamp={data?.timestamp}
-                percent={data?.percent}
-                C={C}
-              />
-            );
-          })}
-        </View>
+            <View style={s.stepsList}>
+              {STEPS.map((step, idx) => {
+                const data = stepData.find(d => d.id === step.id);
+                const status = progress >= step.threshold ? 'done' : idx === activeStepIdx ? 'active' : 'pending';
+                
+                return (
+                  <StepRow
+                    key={step.id}
+                    label={step.label}
+                    status={status}
+                    timestamp={data?.timestamp}
+                    percent={data?.percent}
+                    C={C}
+                  />
+                );
+              })}
+            </View>
+          </>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -228,10 +232,13 @@ const s = StyleSheet.create({
   headerTitle: {fontSize: 13, fontWeight: '800', letterSpacing: 2},
   backBtn: {width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center'},
   container: {flex: 1, paddingHorizontal: 24, justifyContent: 'center'},
-  ringWrapper: {alignItems: 'center', marginBottom: 40},
-  statusTitle: {marginTop: 25, fontSize: 20, fontWeight: '800', letterSpacing: 0.5},
-  subLabel: {marginTop: 6, fontSize: 13, fontWeight: '500'},
+  ringWrapper: {alignItems: 'center', marginBottom: 20},
+  statusTitle: {marginTop: 25, fontSize: 18, fontWeight: '800', letterSpacing: 0.5},
+  subLabel: {marginTop: 6, fontSize: 12, fontWeight: '500'},
   stepsList: {width: '100%'},
+  successBox: {alignItems: 'center', justifyContent: 'center'},
+  successText: {fontSize: 24, fontWeight: '900', letterSpacing: 2, marginTop: 20},
+  successSub: {fontSize: 14, fontWeight: '600', marginTop: 8},
 });
 
 export default OpenProgressScreen;

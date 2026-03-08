@@ -104,7 +104,7 @@ function App(): React.JSX.Element {
         <OpenProgressScreen
           isDark={isDark}
           selection={selection}
-          onComplete={() => setScreen('final')}
+          onComplete={() => setScreen('login')}
           onLogout={() => setScreen('login')}
         />
       )}

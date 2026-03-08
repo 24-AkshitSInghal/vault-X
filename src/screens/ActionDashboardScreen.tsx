@@ -27,7 +27,7 @@ interface Props {
 const ActionDashboardScreen: React.FC<Props> = ({isDark, flow, selection = 'container', onOpen, onLogout}) => {
   const C = getTheme(isDark);
   
-  const [containerNum, setContainerNum] = React.useState('TCLU9693193');
+  const [containerNum, setContainerNum] = React.useState('');
   const [sealNum, setSealNum] = React.useState('');
   const [logoutModal, setLogoutModal] = React.useState(false);
 
@@ -48,7 +48,7 @@ const ActionDashboardScreen: React.FC<Props> = ({isDark, flow, selection = 'cont
         <View style={{alignItems: 'center'}}>
           <Image 
             source={isDark ? require('../../assets/white-logo.png') : require('../../assets/black-logo.png')} 
-             style={{ width: 200, height: 100, resizeMode: 'contain' }} 
+             style={{ width: 160, height: 80, resizeMode: 'contain' }} 
           />
         </View>
         <TouchableOpacity
@@ -100,7 +100,7 @@ const ActionDashboardScreen: React.FC<Props> = ({isDark, flow, selection = 'cont
           style={[s.inputBlock, {backgroundColor: C.surface, borderColor: C.border, color: C.text}]}
           value={containerNum}
           onChangeText={setContainerNum}
-          placeholder="Enter CONTAINER number"
+          placeholder={`Enter ${selection.toUpperCase()} number`}
           placeholderTextColor={C.muted}
           autoCapitalize="characters"
         />
@@ -150,25 +150,26 @@ const ActionDashboardScreen: React.FC<Props> = ({isDark, flow, selection = 'cont
         {/* Confirm Button (Only in Flow 1) */}
         {flow === 'lock' && (
           <TouchableOpacity 
-            style={[s.btn, {backgroundColor: C.surface, borderColor: C.border, opacity: isDisabled ? 0.4 : 1}]}
+           style={[s.btn, {backgroundColor: C.text, elevation: isDisabled ? 0 : 4, opacity: isDisabled ? 0.4 : 1}]} 
             onPress={handleConfirm}
             activeOpacity={0.8}
             disabled={isDisabled}
           >
-            <MaterialIcon name="check-circle-outline" size={18} color={isDisabled ? C.muted : C.text} style={{marginRight: 8}} />
-            <Text style={[s.btnText, {color: isDisabled ? C.muted : C.text}]}>CONFIRM</Text>
+            <Text style={[s.btnText, {color: C.bg}]}>CONFIRM</Text>
           </TouchableOpacity>
         )}
 
-        {/* Open Button */}
-        <TouchableOpacity 
-          style={[s.btn, {backgroundColor: C.text, elevation: isDisabled ? 0 : 4, opacity: isDisabled ? 0.4 : 1}]} 
-          onPress={handleConfirm} 
-          activeOpacity={0.85}
-          disabled={isDisabled}
-        >
-          <Text style={[s.btnText, {color: C.bg}]}>OPEN</Text>
-        </TouchableOpacity>
+        {/* Open Button (Only in Flow 2) */}
+        {flow === 'open' && (
+          <TouchableOpacity 
+            style={[s.btn, {backgroundColor: C.text, elevation: isDisabled ? 0 : 4, opacity: isDisabled ? 0.4 : 1}]} 
+            onPress={handleConfirm} 
+            activeOpacity={0.85}
+            disabled={isDisabled}
+          >
+            <Text style={[s.btnText, {color: C.bg}]}>OPEN</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -182,9 +183,9 @@ const s = StyleSheet.create({
   iconBtn: {width: 36, height: 36, borderRadius: 18, alignItems: 'center',
             justifyContent: 'center', borderWidth: 1},
 
-  content: {paddingHorizontal: SPACING.lg, paddingBottom: SPACING.xxl, paddingTop: SPACING.md},
+  content: {paddingHorizontal: SPACING.lg, paddingBottom: SPACING.xxl, paddingTop: 0},
   
-  pillCenter: {alignItems: 'center', marginBottom: SPACING.md},
+  pillCenter: {alignItems: 'center', marginBottom: 8},
   pill: {paddingHorizontal: SPACING.lg, paddingVertical: 8, borderRadius: RADIUS.pill, borderWidth: 1},
   pillText: {fontSize: 12, fontWeight: '700', letterSpacing: 1},
 
@@ -192,7 +193,7 @@ const s = StyleSheet.create({
     height: 48,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    marginBottom: SPACING.lg,
+    marginBottom: 10,
     paddingHorizontal: SPACING.lg,
     fontSize: 16,
     fontWeight: '700',
@@ -200,15 +201,15 @@ const s = StyleSheet.create({
     textAlign: 'center',
   },
 
-  cameraBox: {height: 160, borderRadius: RADIUS.lg, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginBottom: SPACING.lg},
+  cameraBox: {height: 130, borderRadius: RADIUS.lg, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginBottom: 10},
   cameraImage: {width: '100%', height: '100%'},
 
-  dataCard: {padding: SPACING.md, borderRadius: RADIUS.lg, borderWidth: 1, marginBottom: SPACING.xl},
-  dataRow: {flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6},
+  dataCard: {padding: SPACING.md, borderRadius: RADIUS.lg, borderWidth: 1, marginBottom: 12},
+  dataRow: {flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4},
   dataLabel: {fontSize: 13, fontWeight: '600'},
   dataValue: {fontSize: 13, fontWeight: '500'},
 
-  btn: {flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: RADIUS.md, marginBottom: SPACING.md},
+  btn: {flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: RADIUS.md, marginBottom: 8},
   btnText: {fontSize: 14, fontWeight: '800', letterSpacing: 2},
 
   // modal

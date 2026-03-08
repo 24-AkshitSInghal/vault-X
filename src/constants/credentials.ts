@@ -6,13 +6,21 @@
  */
 
 export const DUMMY_CREDENTIALS = {
+//   lock: {
+//     id: 'vaultx test',
+//     password: 'VxT',
+//   },
+//   open: {
+//     id: 'vaultx test',
+//     password: 'VxT',
+//   },
   lock: {
-    id: 'vaultx test',
-    password: 'VxT',
+    id: '123',
+    password: '123',
   },
   open: {
-    id: 'vaultx test',
-    password: 'VxT',
+    id: '123',
+    password: '123',
   },
 } as const;
 

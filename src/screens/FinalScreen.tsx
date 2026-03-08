@@ -187,11 +187,11 @@ const s = StyleSheet.create({
   },
 
   cameraBox: {
-    height: 180, 
+    height: 140, 
     borderRadius: RADIUS.lg, 
     borderWidth: 1, 
     overflow: 'hidden', 
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.lg,
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 4},
@@ -209,11 +209,11 @@ const s = StyleSheet.create({
   },
 
   dataCard: {
-    paddingVertical: SPACING.lg,
-    paddingHorizontal: SPACING.xl, 
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg, 
     borderRadius: RADIUS.lg, 
     borderWidth: 1,
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.lg,
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
@@ -223,7 +223,7 @@ const s = StyleSheet.create({
   dataRow: {
     flexDirection: 'row', 
     justifyContent: 'space-between', 
-    paddingVertical: 8
+    paddingVertical: 5
   },
   dataLabel: {
     fontSize: 13, 
@@ -240,11 +240,11 @@ const s = StyleSheet.create({
     paddingHorizontal: SPACING.md,
   },
   disclaimer: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '800',
     textAlign: 'center',
     letterSpacing: 0.5,
-    lineHeight: 20,
+    lineHeight: 16,
   },
 
   footer: {
@@ -257,7 +257,7 @@ const s = StyleSheet.create({
     flexDirection: 'row', 
     alignItems: 'center', 
     justifyContent: 'center', 
-    paddingVertical: 20, 
+    paddingVertical: 16, 
     borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',

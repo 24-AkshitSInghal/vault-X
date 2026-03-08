@@ -241,7 +241,7 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
 
         {/* ── Floating Notification Toast ── */}
         {toastMsg && (
-          <Animated.View style={[s.toastCard, {opacity: toastAnim}]}>
+          <Animated.View style={[s.toastCard, {opacity: toastAnim, backgroundColor: isDark ? '#000' : '#fff'}]}>
             <Text style={[s.toastText, {color: C.text}]}>{toastMsg}</Text>
           </Animated.View>
         )}

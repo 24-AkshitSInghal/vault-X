@@ -33,7 +33,7 @@ const STEPS = [
 
 // ── Circular Progress Ring ─────────────────────────────────────────────────────
 const CircularProgress = ({progress, C}: {progress: number; C: any}) => {
-  const size = 200;
+  const size = 160;
   const strokeWidth = 8;
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
@@ -75,8 +75,8 @@ const CircularProgress = ({progress, C}: {progress: number; C: any}) => {
 };
 
 const ringSt = StyleSheet.create({
-  container: {width: 200, height: 200, alignItems: 'center', justifyContent: 'center'},
-  ringBase: {width: 200, height: 200, alignItems: 'center', justifyContent: 'center'},
+  container: {width: 160, height: 160, alignItems: 'center', justifyContent: 'center'},
+  ringBase: {width: 160, height: 160, alignItems: 'center', justifyContent: 'center'},
   segment: {
     position: 'absolute',
     width: 6,
@@ -89,8 +89,8 @@ const ringSt = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'baseline',
   },
-  percent: {fontSize: 54, fontWeight: '900'},
-  percentSymbol: {fontSize: 20, fontWeight: '700', marginLeft: 2},
+  percent: {fontSize: 44, fontWeight: '900'},
+  percentSymbol: {fontSize: 16, fontWeight: '700', marginLeft: 2},
 });
 
 // ── Step Row ──────────────────────────────────────────────────────────────────
@@ -133,10 +133,10 @@ const StepRow = ({label, status, timestamp, percent, C}: any) => {
 const sr = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    padding: 16,
+    padding: 12,
     borderRadius: 16,
     borderWidth: 1,
-    marginBottom: 10,
+    marginBottom: 8,
     alignItems: 'center',
   },
   indicator: {
@@ -187,8 +187,8 @@ const LockProgressScreen: React.FC<Props> = ({isDark, flow, selection, onWarning
           }]);
         }
 
-        // Warning flow at 75%
-        if (next >= 75 && !hasWarned.current) {
+        // Complete flow at 100%
+        if (next >= 100 && !hasWarned.current) {
           hasWarned.current = true;
           clearInterval(interval);
           setTimeout(onWarning, 800);
@@ -263,7 +263,7 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
   container: {flex: 1, paddingHorizontal: 24, justifyContent: 'center'},
-  ringWrapper: {alignItems: 'center', marginBottom: 40},
+  ringWrapper: {alignItems: 'center', marginBottom: 20},
   subLabel: {marginTop: 15, fontSize: 12, fontWeight: '700', letterSpacing: 3},
   stepsList: {width: '100%'},
 });

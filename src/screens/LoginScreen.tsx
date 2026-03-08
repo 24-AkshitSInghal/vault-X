@@ -130,7 +130,7 @@ const LoginScreen: React.FC<Props> = ({isDark, onToggleTheme, onLoginSuccess}) =
           <View style={s.logoSection}>
             <Image 
               source={isDark ? require('../../assets/white-logo.png') : require('../../assets/black-logo.png')} 
-              style={{ width: 220, height: 150, resizeMode: 'contain', marginBottom: 8 }} 
+              style={{ width: 170, height: 130, resizeMode: 'contain', marginBottom: 8 }} 
             />
             <Text style={[s.tagline, {color: C.muted}]}>Secure Container Management</Text>
           </View>
