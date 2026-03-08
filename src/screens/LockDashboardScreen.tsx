@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useRef} from 'react';
 import {
   View,
   Text,
@@ -6,9 +6,10 @@ import {
   StyleSheet,
   StatusBar,
   Alert,
+  Animated,
+  Image,
   Modal,
   Pressable,
-  Image,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
@@ -58,15 +59,28 @@ const bbSt = StyleSheet.create({
 const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLogout, onProceed}) => {
   const C = getTheme(isDark);
   const [selection,   setSelection]   = useState<SelectionType>(null);
-  const [resetModal,  setResetModal]  = useState(false);
+  const [showBatteryWarning, setShowBatteryWarning] = useState(false);
+  
+  const [toastMsg,  setToastMsg]  = useState<string | null>(null);
+  const toastAnim = useRef(new Animated.Value(0)).current;
 
-  const handleSelect = (type: SelectionType) => {
-    setSelection(prev => (prev === type ? null : type));
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    toastAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(toastAnim, {toValue: 1, duration: 250, useNativeDriver: true}),
+      Animated.delay(1200),
+      Animated.timing(toastAnim, {toValue: 0, duration: 250, useNativeDriver: true}),
+    ]).start(() => setToastMsg(null));
+  };
+
+  const handleSelect = (type: 'container' | 'trailer') => {
+    setSelection(type);
+    showToast(`${type.toUpperCase()} SELECTED`);
   };
 
   const handleReset = () => {
     setSelection(null);
-    setResetModal(false);
   };
 
   const handleProceed = () => {
@@ -160,7 +174,7 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
           <TouchableOpacity
             activeOpacity={0.85}
             style={[s.actionBtn, {backgroundColor: C.surface, borderColor: C.border}]}
-            onPress={() => setResetModal(true)}>
+            onPress={handleReset}>
             <MaterialIcon name="refresh" size={20} color={C.muted} style={s.actionIcon} />
             <Text style={[s.actionText, {color: C.muted}]}>RESET</Text>
           </TouchableOpacity>
@@ -168,7 +182,11 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
         </View>
 
         {/* ── Device Status Card ── */}
-        <View style={[s.statusCard, {backgroundColor: C.surface, borderColor: C.border}]}>
+        <TouchableOpacity 
+          activeOpacity={0.8} 
+          onPress={() => setShowBatteryWarning(true)}
+          style={[s.statusCard, {backgroundColor: C.surface, borderColor: C.border}]}
+        >
           <View style={s.statusRow}>
             <MaterialIcon name="battery-high" size={15} color={C.muted} style={{marginRight: 6}} />
             <Text style={[s.statusLabel, {color: C.text}]}>
@@ -199,7 +217,7 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
               {DEVICE.connected ? 'CONNECTED' : 'DISCONNECTED'}
             </Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* ── Proceed Button (shows when selection made) ── */}
         {selection && (
@@ -209,35 +227,62 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
             onPress={handleProceed}>
             <MaterialIcon name="arrow-right-circle" size={20} color={C.btnText} style={{marginRight: 10}} />
             <Text style={[s.proceedText, {color: C.btnText}]}>
-              {flow === 'lock' ? 'LOCK' : 'OPEN'} {selection?.toUpperCase()}
+              PROCEED WITH {selection.toUpperCase()}
             </Text>
           </TouchableOpacity>
         )}
 
+        {/* ── Floating Notification Toast ── */}
+        {toastMsg && (
+          <Animated.View style={[s.toastCard, {opacity: toastAnim}]}>
+            <Text style={[s.toastText, {color: C.text}]}>{toastMsg}</Text>
+          </Animated.View>
+        )}
       </View>
 
-      {/* ── Reset Confirmation Modal ── */}
-      <Modal
-        visible={resetModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setResetModal(false)}>
-        <Pressable style={s.modalOverlay} onPress={() => setResetModal(false)}>
-          <Pressable style={[s.modalCard, {backgroundColor: C.surface, borderColor: C.border}]}>
-            <Text style={[s.modalTitle, {color: C.text}]}>Reset Selection</Text>
-            <Text style={[s.modalBody, {color: C.subText}]}>
-              Are you sure you want to reset your selection?
-            </Text>
-            <View style={s.modalActions}>
-              <TouchableOpacity onPress={() => setResetModal(false)} activeOpacity={0.7}>
-                <Text style={[s.modalCancel, {color: C.muted}]}>CANCEL</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={handleReset} activeOpacity={0.7}>
-                <Text style={[s.modalConfirm, {color: C.text}]}>RESET</Text>
-              </TouchableOpacity>
+      {/* ── Low Battery Warning Modal ── */}
+      <Modal 
+        visible={showBatteryWarning} 
+        animationType="fade" 
+        transparent={false}
+        onRequestClose={() => setShowBatteryWarning(false)}
+      >
+        <SafeAreaView 
+          style={[s.safeArea, {backgroundColor: isDark ? '#1C1C1E' : '#EAE6F5'}]} 
+          edges={['top', 'bottom']}
+        >
+          <Pressable style={s.modalWarnWrap} onPress={() => setShowBatteryWarning(false)}>
+            
+            <View style={s.warnLogoBox}>
+               <Image 
+                 source={require('../../assets/tranperent-icon.png')} 
+                 style={{ width: 200  , height: 150, resizeMode: 'contain' }} 
+               />
+               {/* <MaterialIcon name="lock-alert" size={45} color={isDark ? '#FFFFFF' : '#000000'} style={{marginLeft: 15}} /> */}
             </View>
+            
+            <View style={s.warnContentBox}>
+              <View style={s.warningBadge}>
+                <MaterialIcon name="alert-outline" size={26} color="#FDE047" style={{marginRight: 8}} />
+                <Text style={s.warnHeadline}>!WARNING!</Text>
+                <MaterialIcon name="alert-outline" size={26} color="#FDE047" style={{marginLeft: 8}} />
+              </View>
+
+              <Text style={s.warnTitle}>LOW BATTERY!</Text>
+              
+              <View style={[s.warnDivider, {backgroundColor: 'rgba(239, 68, 68, 0.3)'}]} />
+
+              <Text style={s.warnSubText}>PLEASE RECHARGE</Text>
+              
+              <View style={s.warnOrCircle}>
+                <Text style={s.warnOrText}>OR</Text>
+              </View>
+
+              <Text style={s.warnSubText}>REPLACE BATTERY</Text>
+            </View>
+
           </Pressable>
-        </Pressable>
+        </SafeAreaView>
       </Modal>
 
     </SafeAreaView>
@@ -309,25 +354,108 @@ const s = StyleSheet.create({
   },
   proceedText: {fontSize: 13, fontWeight: '800', letterSpacing: 2},
 
-  // modal
-  modalOverlay: {
+  // toast
+  toastCard: {
+    position: 'absolute',
+    top: 0,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: RADIUS.pill,
+  },
+  toastText: {
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+
+  // full screen warning
+  modalWarnWrap: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: SPACING.xl,
+    paddingTop: 80,
   },
-  modalCard: {
-    width: '100%',
+  warnLogoBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#262626',
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.xl,
     borderRadius: RADIUS.lg,
+    width: '100%',
+    justifyContent: 'center',
+    marginBottom: 50,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
     borderWidth: 1,
-    padding: SPACING.lg,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
-  modalTitle:   {fontSize: 17, fontWeight: '700', marginBottom: SPACING.sm},
-  modalBody:    {fontSize: 14, lineHeight: 20, marginBottom: SPACING.lg},
-  modalActions: {flexDirection: 'row', justifyContent: 'flex-end', gap: SPACING.lg},
-  modalCancel:  {fontSize: 13, fontWeight: '600', letterSpacing: 1},
-  modalConfirm: {fontSize: 13, fontWeight: '800', letterSpacing: 1},
+  warnContentBox: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  warningBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 40,
+    backgroundColor: 'rgba(253, 224, 71, 0.1)',
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(253, 224, 71, 0.2)',
+  },
+  warnHeadline: {
+    color: '#FDE047',
+    fontSize: 28,
+    fontWeight: '900',
+    letterSpacing: 2.5,
+    textShadowColor: 'rgba(253, 224, 71, 0.3)',
+    textShadowOffset: {width: 0, height: 2},
+    textShadowRadius: 6,
+  },
+  warnTitle: {
+    color: '#EF4444',
+    fontSize: 26,
+    fontWeight: '900',
+    letterSpacing: 1.5,
+    marginBottom: SPACING.xl,
+    textAlign: 'center',
+  },
+  warnSubText: {
+    color: '#EF4444',
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    textAlign: 'center',
+  },
+  warnDivider: {
+    width: 60,
+    height: 4,
+    borderRadius: 2,
+    marginBottom: SPACING.xl,
+  },
+  warnOrCircle: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: SPACING.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.2)',
+  },
+  warnOrText: {
+    color: '#EF4444',
+    fontSize: 16,
+    fontWeight: '800',
+  },
 });
 
 export default LockDashboardScreen;
