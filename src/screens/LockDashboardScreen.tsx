@@ -407,7 +407,7 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
 
               {/* Slide to confirm */}
               <SlideToConfirm
-                label="SLIDE TO CONFIRM"
+                label="SLIDE TO PROCEED"
                 onConfirm={confirmProceed}
                 thumbColor={C.text}
                 textColor={C.muted}
