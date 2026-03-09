@@ -25,9 +25,9 @@ interface Props {
 
 const STEPS = [
   {id: 'init', label: 'Verifying Security Protocol', threshold: 15},
-  {id: 'comm', label: 'Establishing Winch Link', threshold: 35},
-  {id: 'mech', label: 'Engaging Mechanical Bolts', threshold: 60},
-  {id: 'hca', label: 'Health Check Alignment', threshold: 85},
+  {id: 'comm', label: 'Connecting to Lock', threshold: 35},
+  {id: 'mech', label: 'Engaging VaultX lock', threshold: 60},
+  {id: 'hca', label: 'Operating system check', threshold: 85},
   {id: 'final', label: 'Synchronizing Cloud Vault', threshold: 100},
 ];
 

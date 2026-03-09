@@ -22,8 +22,8 @@ interface Props {
 
 const STEPS = [
   {id: 'init', label: 'Verifying Security Protocol', threshold: 15},
-  {id: 'comm', label: 'Checking winch connection', threshold: 35},
-  {id: 'mech', label: 'Disengaging lock mechanism', threshold: 60},
+  {id: 'comm', label: 'Connecting to Lock', threshold: 35},
+  {id: 'mech', label: 'Disengaging VaultX lock', threshold: 60},
   {id: 'door', label: 'Releasing doors', threshold: 85},
   {id: 'final', label: 'Finalizing unlock', threshold: 100},
 ];

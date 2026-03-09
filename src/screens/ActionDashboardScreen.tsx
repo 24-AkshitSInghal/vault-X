@@ -142,7 +142,7 @@ const ActionDashboardScreen: React.FC<Props> = ({isDark, flow, selection = 'cont
             <Text style={[s.dataValue, {color: C.text}]}>97%</Text>
           </View>
           <View style={s.dataRow}>
-            <Text style={[s.dataLabel, {color: C.text}]}>Winch:</Text>
+            <Text style={[s.dataLabel, {color: C.text}]}>Lock SN:</Text>
             <Text style={[s.dataValue, {color: C.text}]}>CL001</Text>
           </View>
         </View>

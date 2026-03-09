@@ -98,7 +98,7 @@ const FinalScreen: React.FC<Props> = ({isDark, containerNum, sealNum, onLogout})
           </View>
 
           <View style={s.dataRow}>
-            <Text style={[s.dataLabel, {color: C.subText}]}>Winch SN:</Text>
+            <Text style={[s.dataLabel, {color: C.subText}]}>Lock SN:</Text>
             <Text style={[s.dataValue, {color: C.text}]}>CL001</Text>
           </View>
 
