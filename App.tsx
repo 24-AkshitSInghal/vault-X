@@ -13,10 +13,22 @@ import OpenWarningScreen   from './src/screens/OpenWarningScreen';
 import OpenProgressScreen  from './src/screens/OpenProgressScreen';
 import FinalScreen         from './src/screens/FinalScreen';
 import {FlowType}          from './src/constants/credentials';
+import { Provider, useDispatch } from 'react-redux';
+import { store } from './src/store';
+import { logout } from './src/store/slices/authSlice';
 
 type Screen = 'login' | 'dashboard' | 'lockProgress' | 'lockWarning' | 'actionDashboard' | 'openWarning' | 'openProgress' | 'final';
 
 function App(): React.JSX.Element {
+  return (
+    <Provider store={store}>
+      <AppContent />
+    </Provider>
+  );
+}
+
+function AppContent(): React.JSX.Element {
+  const dispatch = useDispatch();
   const [isDark,     setIsDark]     = useState(true);
   const [screen,     setScreen]     = useState<Screen>('login');
   const [flow,       setFlow]       = useState<FlowType>('lock');
@@ -25,6 +37,11 @@ function App(): React.JSX.Element {
   const [sealNum,      setSealNum]      = useState<string>('');
 
   const toggleTheme = () => setIsDark(v => !v);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    setScreen('login');
+  };
 
   return (
     <SafeAreaProvider>
@@ -48,7 +65,7 @@ function App(): React.JSX.Element {
           isDark={isDark}
           flow={flow}
           onToggleTheme={toggleTheme}
-          onLogout={() => setScreen('login')}
+          onLogout={handleLogout}
           onProceed={sel => { setSelection(sel); setScreen('lockProgress'); }}
         />
       )}
@@ -59,7 +76,7 @@ function App(): React.JSX.Element {
           flow={flow}
           selection={selection}
           onWarning={() => setScreen('lockWarning')}
-          onLogout={() => setScreen('login')}
+          onLogout={handleLogout}
         />
       )}
 
@@ -68,8 +85,8 @@ function App(): React.JSX.Element {
           isDark={isDark}
           flow={flow}
           onConfirm={() => setScreen('actionDashboard')}
-          onReset={() => setScreen('dashboard')}
-          onLogout={() => setScreen('login')}
+          onReset={handleLogout}
+          onLogout={handleLogout}
         />
       )}
 
@@ -87,7 +104,7 @@ function App(): React.JSX.Element {
               setScreen('final');
             }
           }}
-          onLogout={() => setScreen('login')}
+          onLogout={handleLogout}
         />
       )}
 
@@ -96,7 +113,7 @@ function App(): React.JSX.Element {
           isDark={isDark}
           onYes={() => setScreen('openProgress')}
           onNo={() => setScreen('actionDashboard')}
-          onLogout={() => setScreen('login')}
+          onLogout={handleLogout}
         />
       )}
 
@@ -104,17 +121,19 @@ function App(): React.JSX.Element {
         <OpenProgressScreen
           isDark={isDark}
           selection={selection}
-          onComplete={() => setScreen('login')}
-          onLogout={() => setScreen('login')}
+          onComplete={() => setScreen('final')}
+          onLogout={handleLogout}
         />
       )}
 
       {screen === 'final' && (
         <FinalScreen
           isDark={isDark}
+          flow={flow}
+          selection={selection}
           containerNum={containerNum}
           sealNum={sealNum}
-          onLogout={() => setScreen('login')}
+          onLogout={handleLogout}
         />
       )}
     </SafeAreaProvider>

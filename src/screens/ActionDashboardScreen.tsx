@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 import {getTheme, RADIUS, SPACING} from '../constants/colors';
 
 interface Props {
@@ -26,10 +28,36 @@ interface Props {
 
 const ActionDashboardScreen: React.FC<Props> = ({isDark, flow, selection = 'container', onOpen, onLogout}) => {
   const C = getTheme(isDark);
+  const { loginId } = useSelector((state: RootState) => state.auth);
   
   const [containerNum, setContainerNum] = React.useState('');
   const [sealNum, setSealNum] = React.useState('');
   const [logoutModal, setLogoutModal] = React.useState(false);
+  const [currentDate, setCurrentDate] = React.useState('');
+  const [currentTime, setCurrentTime] = React.useState('');
+
+  React.useEffect(() => {
+    const updateDateTime = () => {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+      });
+      const timeStr = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+      });
+      setCurrentDate(dateStr);
+      setCurrentTime(timeStr);
+    };
+
+    updateDateTime();
+    const timer = setInterval(updateDateTime, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const isDisabled = !containerNum.trim() || !sealNum.trim();
 
@@ -127,11 +155,11 @@ const ActionDashboardScreen: React.FC<Props> = ({isDark, flow, selection = 'cont
         <View style={[s.dataCard, {backgroundColor: C.surface, borderColor: C.border}]}>
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, {color: C.text}]}>Date:</Text>
-            <Text style={[s.dataValue, {color: C.text}]}>Mar 08, 2026</Text>
+            <Text style={[s.dataValue, {color: C.text}]}>{currentDate}</Text>
           </View>
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, {color: C.text}]}>Time:</Text>
-            <Text style={[s.dataValue, {color: C.text}]}>01:05:59 PM</Text>
+            <Text style={[s.dataValue, {color: C.text}]}>{currentTime}</Text>
           </View>
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, {color: C.text}]}>GPS:</Text>
@@ -144,6 +172,10 @@ const ActionDashboardScreen: React.FC<Props> = ({isDark, flow, selection = 'cont
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, {color: C.text}]}>Lock SN:</Text>
             <Text style={[s.dataValue, {color: C.text}]}>CL001</Text>
+          </View>
+          <View style={s.dataRow}>
+            <Text style={[s.dataLabel, {color: C.text}]}>Login ID:</Text>
+            <Text style={[s.dataValue, {color: C.text}]}>{loginId || 'N/A'}</Text>
           </View>
         </View>
 

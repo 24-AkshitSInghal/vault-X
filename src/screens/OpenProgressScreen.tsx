@@ -6,7 +6,9 @@ import {
   StyleSheet,
   StatusBar,
   Animated,
+  ScrollView,
   Image,
+  Modal,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
@@ -23,9 +25,9 @@ interface Props {
 const STEPS = [
   {id: 'init', label: 'Verifying Security Protocol', threshold: 15},
   {id: 'comm', label: 'Connecting to Lock', threshold: 35},
-  {id: 'mech', label: 'Disengaging VaultX lock', threshold: 60},
-  {id: 'door', label: 'Releasing doors', threshold: 85},
-  {id: 'final', label: 'Finalizing unlock', threshold: 100},
+  {id: 'mech', label: 'Disengaging VaultX Lock', threshold: 60},
+  {id: 'door', label: 'Releasing Doors', threshold: 85},
+  {id: 'final', label: 'Finalizing Unlock', threshold: 100},
 ];
 
 // ── Circular Progress Ring ─────────────────────────────────────────────────────
@@ -134,6 +136,7 @@ const OpenProgressScreen: React.FC<Props> = ({isDark, selection, onComplete, onL
   const [progress, setProgress] = useState(0);
   const [stepData, setStepData] = useState<any[]>([]);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [logoutModal, setLogoutModal] = useState(false);
   const hasCompleted = useRef(false);
 
   const getTimestamp = () => {
@@ -178,12 +181,49 @@ const OpenProgressScreen: React.FC<Props> = ({isDark, selection, onComplete, onL
   return (
     <SafeAreaView style={[s.safe, {backgroundColor: C.bg}]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-
-      <View style={s.header}>
+      <View style={s.topBar}>
         <View style={{width: 40}} />
-        <View style={{flex: 1}} />
-        <View style={{width: 40}} />
+        <View style={{alignItems: 'center'}}>
+          <Image 
+            source={isDark ? require('../../assets/white-logo.png') : require('../../assets/black-logo.png')} 
+             style={{ width: 160, height: 80, resizeMode: 'contain' }} 
+          />
+        </View>
+        <TouchableOpacity
+          style={[s.iconBtn, {backgroundColor: C.surface, borderColor: C.border}]}
+          onPress={() => setLogoutModal(true)}>
+          <MaterialIcon name="logout-variant" size={16} color={C.subText} />
+        </TouchableOpacity>
       </View>
+
+      <Modal
+        visible={logoutModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLogoutModal(false)}>
+        <View style={s.modalOverlay}>
+          <View style={[s.modalCard, {backgroundColor: C.surface, borderColor: C.border}]}>
+            <View style={{backgroundColor: C.surfaceHigh, paddingVertical: 12, paddingHorizontal: 16, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg }}>
+              <Text style={[s.modalTitle, {color: C.text, marginBottom: 0}]}>Sign Out</Text>
+            </View>
+
+            <View style={{padding: SPACING.lg}}>
+              <Text style={{color: C.subText, fontSize: 13, lineHeight: 22, marginTop: 4, marginBottom: 20}}>
+                Are you sure you want to sign out?
+              </Text>
+
+              <View style={s.modalActions}>
+                <TouchableOpacity onPress={() => setLogoutModal(false)} activeOpacity={0.7} style={{paddingVertical: 10, paddingHorizontal: 15}}>
+                  <Text style={{color: C.muted, fontSize: 13, fontWeight: '700', letterSpacing: 1}}>CANCEL</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={onLogout} activeOpacity={0.7} style={{paddingVertical: 10, paddingHorizontal: 15}}>
+                  <Text style={{color: C.danger, fontSize: 13, fontWeight: '800', letterSpacing: 1}}>SIGN OUT</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <View style={s.container}>
         {showSuccess ? (
@@ -226,9 +266,11 @@ const OpenProgressScreen: React.FC<Props> = ({isDark, selection, onComplete, onL
 
 const s = StyleSheet.create({
   safe: {flex: 1},
-  header: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 15},
+  topBar: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+           paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm},
+  iconBtn: {width: 36, height: 36, borderRadius: 18, alignItems: 'center',
+            justifyContent: 'center', borderWidth: 1},
   logoWrapper: {flexDirection: 'row', alignItems: 'center', justifyContent: 'center'},
-  iconBtn: {width: 40},
   headerTitle: {fontSize: 13, fontWeight: '800', letterSpacing: 2},
   backBtn: {width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center'},
   container: {flex: 1, paddingHorizontal: 24, justifyContent: 'center'},
@@ -239,6 +281,28 @@ const s = StyleSheet.create({
   successBox: {alignItems: 'center', justifyContent: 'center'},
   successText: {fontSize: 24, fontWeight: '900', letterSpacing: 2, marginTop: 20},
   successSub: {fontSize: 14, fontWeight: '600', marginTop: 8},
+
+  // modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.xl,
+  },
+  modalCard: {
+    width: '100%',
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    padding: 0,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  modalTitle:   {fontSize: 15, fontWeight: '700', letterSpacing: 0.5},
+  modalActions: {flexDirection: 'row', justifyContent: 'flex-end', gap: SPACING.sm},
 });
 
 export default OpenProgressScreen;
