@@ -120,13 +120,7 @@ const LoginScreen: React.FC<Props> = ({isDark, onToggleTheme, onLoginSuccess}) =
     <SafeAreaView style={[s.safeArea, {backgroundColor: C.bg}]} edges={['top', 'bottom']}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={C.bg} />
 
-      <GlobalHeader
-        isDark={isDark}
-        onToggleTheme={onToggleTheme}
-        onLogout={() => {}}
-        showLogout={false}
-        showLogo={false}
-      />
+     
 
       <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
         <ScrollView 
@@ -139,7 +133,7 @@ const LoginScreen: React.FC<Props> = ({isDark, onToggleTheme, onLoginSuccess}) =
           <View style={s.logoSection}>
             <Image 
               source={isDark ? require('../../assets/white-logo.png') : require('../../assets/black-logo.png')} 
-              style={{ width: 200, height: 150, resizeMode: 'contain', marginBottom: 8 }} 
+              style={{ width: 200, height: 150, resizeMode: 'contain'}} 
             />
             <Text style={[s.tagline, {color: C.muted}]}>Secure Container Management</Text>
           </View>
