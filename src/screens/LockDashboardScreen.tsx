@@ -15,6 +15,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
 import {getTheme, RADIUS, SPACING} from '../constants/colors';
 import {FlowType} from '../constants/credentials';
+import {GlobalHeader} from '../components/GlobalHeader';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type SelectionType = 'container' | 'trailer' | null;
@@ -185,30 +186,11 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
     <SafeAreaView style={[s.safeArea, {backgroundColor: C.bg}]} edges={['top', 'bottom']}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={C.bg} />
 
-      {/* ── Top Bar ── */}
-      <View style={s.topBar}>
-        <View style={s.topBarLeft} />
-        <View style={s.headerLogo}>
-          <Image
-            source={isDark ? require('../../assets/white-logo.png') : require('../../assets/black-logo.png')}
-            style={{width: 200, height: 100, resizeMode: 'contain'}}
-          />
-        </View>
-        <View style={s.topBarRight}>
-          <TouchableOpacity
-            style={[s.iconBtn, {backgroundColor: C.surface, borderColor: C.border}]}
-            onPress={onToggleTheme}
-            activeOpacity={0.8}>
-            <MaterialIcon name={isDark ? 'weather-sunny' : 'weather-night'} size={16} color={C.subText} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[s.iconBtn, {backgroundColor: C.surface, borderColor: C.border, marginLeft: 8}]}
-            onPress={() => setLogoutModal(true)}
-            activeOpacity={0.8}>
-            <MaterialIcon name="logout-variant" size={16} color={C.subText} />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <GlobalHeader 
+        isDark={isDark} 
+        onToggleTheme={onToggleTheme} 
+        onLogout={onLogout} 
+      />
 
       {/* ── Body ── */}
       <View style={s.body}>

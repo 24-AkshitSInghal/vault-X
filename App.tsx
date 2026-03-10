@@ -77,6 +77,7 @@ function AppContent(): React.JSX.Element {
           selection={selection}
           onWarning={() => setScreen('lockWarning')}
           onLogout={handleLogout}
+          onToggleTheme={toggleTheme}
         />
       )}
 
@@ -87,6 +88,7 @@ function AppContent(): React.JSX.Element {
           onConfirm={() => setScreen('actionDashboard')}
           onReset={handleLogout}
           onLogout={handleLogout}
+          onToggleTheme={toggleTheme}
         />
       )}
 
@@ -105,6 +107,7 @@ function AppContent(): React.JSX.Element {
             }
           }}
           onLogout={handleLogout}
+          onToggleTheme={toggleTheme}
         />
       )}
 
@@ -114,6 +117,7 @@ function AppContent(): React.JSX.Element {
           onYes={() => setScreen('openProgress')}
           onNo={() => setScreen('actionDashboard')}
           onLogout={handleLogout}
+          onToggleTheme={toggleTheme}
         />
       )}
 
@@ -123,6 +127,7 @@ function AppContent(): React.JSX.Element {
           selection={selection}
           onComplete={() => setScreen('final')}
           onLogout={handleLogout}
+          onToggleTheme={toggleTheme}
         />
       )}
 
@@ -134,6 +139,7 @@ function AppContent(): React.JSX.Element {
           containerNum={containerNum}
           sealNum={sealNum}
           onLogout={handleLogout}
+          onToggleTheme={toggleTheme}
         />
       )}
     </SafeAreaProvider>

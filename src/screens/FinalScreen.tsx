@@ -13,6 +13,7 @@ import MaterialIcon from '@react-native-vector-icons/material-design-icons';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import {getTheme, RADIUS, SPACING} from '../constants/colors';
+import {GlobalHeader} from '../components/GlobalHeader';
 
 interface Props {
   isDark: boolean;
@@ -21,14 +22,14 @@ interface Props {
   containerNum: string;
   sealNum: string;
   onLogout: () => void;
+  onToggleTheme: () => void;
 }
 
-const FinalScreen: React.FC<Props> = ({isDark, flow, selection, containerNum, sealNum, onLogout}) => {
+const FinalScreen: React.FC<Props> = ({isDark, flow, selection, containerNum, sealNum, onLogout, onToggleTheme}) => {
   const C = getTheme(isDark);
   const { loginId } = useSelector((state: RootState) => state.auth);
   const [currentDate, setCurrentDate] = useState('');
   const [currentTime, setCurrentTime] = useState('');
-  const [logoutModal, setLogoutModal] = useState(false);
 
   useEffect(() => {
     const now = new Date();
@@ -49,22 +50,11 @@ const FinalScreen: React.FC<Props> = ({isDark, flow, selection, containerNum, se
     <SafeAreaView style={[s.safe, {backgroundColor: C.bg}]} edges={['top', 'bottom']}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={C.bg} />
 
-      {/* ── Top Bar ── */}
-      <View style={s.topBar}>
-        <View style={{width: 40}} />
-        <View style={s.logoWrapper}>
-          <Image 
-            source={isDark ? require('../../assets/white-logo.png') : require('../../assets/black-logo.png')} 
-            style={{ width: 140, height: 100, resizeMode: 'contain' }} 
-          />
-        </View>
-        <TouchableOpacity
-          style={[s.iconBtn]}
-          onPress={onLogout}
-          activeOpacity={0.8}>
-          {/* Invisible btn for balance? No, let's just make it width 40 */}
-        </TouchableOpacity>
-      </View>
+      <GlobalHeader 
+        isDark={isDark} 
+        onToggleTheme={onToggleTheme} 
+        onLogout={onLogout} 
+      />
 
       <View style={s.content}>
         
@@ -142,39 +132,10 @@ const FinalScreen: React.FC<Props> = ({isDark, flow, selection, containerNum, se
       
       {/* Absolute Bottom Button */}
       <View style={s.footer}>
-        <TouchableOpacity style={[s.logoutBtn, {backgroundColor: C.btnBg}]} onPress={() => setLogoutModal(true)} activeOpacity={0.85}>
+        <TouchableOpacity style={[s.logoutBtn, {backgroundColor: C.btnBg}]} onPress={onLogout} activeOpacity={0.85}>
           <Text style={[s.logoutBtnText, {color: C.btnText}]}>LOGOUT</Text>
         </TouchableOpacity>
       </View>
-
-      <Modal
-        visible={logoutModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setLogoutModal(false)}>
-        <View style={s.modalOverlay}>
-          <View style={[s.modalCard, {backgroundColor: C.surface, borderColor: C.border}]}>
-            <View style={{backgroundColor: C.surfaceHigh, paddingVertical: 12, paddingHorizontal: 16, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg }}>
-              <Text style={[s.modalTitle, {color: C.text, marginBottom: 0}]}>Sign Out</Text>
-            </View>
-
-            <View style={{padding: SPACING.lg}}>
-              <Text style={{color: C.subText, fontSize: 13, lineHeight: 22, marginTop: 4, marginBottom: 20}}>
-                Are you sure you want to sign out?
-              </Text>
-
-              <View style={s.modalActions}>
-                <TouchableOpacity onPress={() => setLogoutModal(false)} activeOpacity={0.7} style={{paddingVertical: 10, paddingHorizontal: 15}}>
-                  <Text style={{color: C.muted, fontSize: 13, fontWeight: '700', letterSpacing: 1}}>CANCEL</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={onLogout} activeOpacity={0.7} style={{paddingVertical: 10, paddingHorizontal: 15}}>
-                  <Text style={{color: C.danger, fontSize: 13, fontWeight: '800', letterSpacing: 1}}>SIGN OUT</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
     </SafeAreaView>
   );
@@ -182,20 +143,6 @@ const FinalScreen: React.FC<Props> = ({isDark, flow, selection, containerNum, se
 
 const s = StyleSheet.create({
   safe: {flex: 1},
-  topBar: {
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'space-between', 
-    paddingHorizontal: SPACING.lg, 
-  },
-  logoWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  iconBtn: {
-    width: 40,
-  },
 
   content: {
     flex: 1,
@@ -284,28 +231,6 @@ const s = StyleSheet.create({
     fontWeight: '800', 
     letterSpacing: 2
   },
-
-  // modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.xl,
-  },
-  modalCard: {
-    width: '100%',
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    padding: 0,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-  },
-  modalTitle:   {fontSize: 15, fontWeight: '700', letterSpacing: 0.5},
-  modalActions: {flexDirection: 'row', justifyContent: 'flex-end', gap: SPACING.sm},
 
   statusLabelWrapper: {
     alignItems: 'center',
