@@ -10,22 +10,17 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store';
 import {getTheme, RADIUS, SPACING} from '../constants/colors';
 
 interface Props {
   isDark: boolean;
-  flow: 'lock' | 'open';
-  selection: 'container' | 'trailer';
   containerNum: string;
   sealNum: string;
   onLogout: () => void;
 }
 
-const FinalScreen: React.FC<Props> = ({isDark, flow, selection, containerNum, sealNum, onLogout}) => {
+const FinalScreen: React.FC<Props> = ({isDark, containerNum, sealNum, onLogout}) => {
   const C = getTheme(isDark);
-  const { loginId } = useSelector((state: RootState) => state.auth);
   const [currentDate, setCurrentDate] = useState('');
   const [currentTime, setCurrentTime] = useState('');
   const [logoutModal, setLogoutModal] = useState(false);
@@ -82,13 +77,6 @@ const FinalScreen: React.FC<Props> = ({isDark, flow, selection, containerNum, se
         {/* Data Card */}
         <View style={[s.dataCard, {backgroundColor: C.surfaceHigh, borderColor: C.border}]}>
           
-          {/* Status Label */}
-          <View style={s.statusLabelWrapper}>
-            <Text style={s.statusLabel}>
-              {flow === 'lock' ? 'LOCKED' : 'OPENED'}
-            </Text>
-          </View>
-          
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, {color: C.subText}]}>Date:</Text>
             <Text style={[s.dataValue, {color: C.text}]}>{currentDate}</Text>
@@ -115,9 +103,7 @@ const FinalScreen: React.FC<Props> = ({isDark, flow, selection, containerNum, se
           </View>
 
           <View style={s.dataRow}>
-            <Text style={[s.dataLabel, {color: C.subText}]}>
-              {selection === 'container' ? 'Container #:' : 'Trailer #:'}
-            </Text>
+            <Text style={[s.dataLabel, {color: C.subText}]}>Container #:</Text>
             <Text style={[s.dataValue, {color: C.text}]}>{containerNum || 'TCLU9693193'}</Text>
           </View>
 
@@ -125,10 +111,7 @@ const FinalScreen: React.FC<Props> = ({isDark, flow, selection, containerNum, se
             <Text style={[s.dataLabel, {color: C.subText}]}>Seal #:</Text>
             <Text style={[s.dataValue, {color: C.text}]}>{sealNum}</Text>
           </View>
-          <View style={s.dataRow}>
-            <Text style={[s.dataLabel, {color: C.subText}]}>Login ID:</Text>
-            <Text style={[s.dataValue, {color: C.text}]}>{loginId || 'N/A'}</Text>
-          </View>
+
         </View>
 
         {/* Disclaimer Warning */}
@@ -306,17 +289,6 @@ const s = StyleSheet.create({
   },
   modalTitle:   {fontSize: 15, fontWeight: '700', letterSpacing: 0.5},
   modalActions: {flexDirection: 'row', justifyContent: 'flex-end', gap: SPACING.sm},
-
-  statusLabelWrapper: {
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  statusLabel: {
-    color: '#FF0000',
-    fontSize: 18,
-    fontWeight: '900',
-    letterSpacing: 1.5,
-  },
 });
 
 export default FinalScreen;

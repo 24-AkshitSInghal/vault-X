@@ -7,7 +7,6 @@ import {
   StatusBar,
   Animated,
   Easing,
-  Modal,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
@@ -161,7 +160,6 @@ const LockProgressScreen: React.FC<Props> = ({isDark, flow, selection, onWarning
   const C = getTheme(isDark);
   const [progress, setProgress] = useState(0);
   const [stepData, setStepData] = useState<any[]>([]);
-  const [logoutModal, setLogoutModal] = useState(false);
   const hasWarned = useRef(false);
 
   const getTimestamp = () => {
@@ -208,44 +206,14 @@ const LockProgressScreen: React.FC<Props> = ({isDark, flow, selection, onWarning
   return (
     <SafeAreaView style={[s.safe, {backgroundColor: C.bg}]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-      <View style={s.topBar}>
-        <TouchableOpacity
-          style={[s.iconBtn, {backgroundColor: C.surface, borderColor: C.border}]}
-          onPress={() => setLogoutModal(true)}>
+
+      <View style={s.header}>
+        <TouchableOpacity onPress={onLogout} style={[s.backBtn, {backgroundColor: C.surface}]}>
           <MaterialIcon name="chevron-left" size={24} color={C.text} />
         </TouchableOpacity>
         <Text style={[s.headerTitle, {color: C.text}]}>OPERATION PROGRESS</Text>
         <View style={{width: 40}} />
       </View>
-
-      <Modal
-        visible={logoutModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setLogoutModal(false)}>
-        <View style={s.modalOverlay}>
-          <View style={[s.modalCard, {backgroundColor: C.surface, borderColor: C.border}]}>
-            <View style={{backgroundColor: C.surfaceHigh, paddingVertical: 12, paddingHorizontal: 16, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg }}>
-              <Text style={[s.modalTitle, {color: C.text, marginBottom: 0}]}>Sign Out</Text>
-            </View>
-
-            <View style={{padding: SPACING.lg}}>
-              <Text style={{color: C.subText, fontSize: 13, lineHeight: 22, marginTop: 4, marginBottom: 20}}>
-                Are you sure you want to sign out?
-              </Text>
-
-              <View style={s.modalActions}>
-                <TouchableOpacity onPress={() => setLogoutModal(false)} activeOpacity={0.7} style={{paddingVertical: 10, paddingHorizontal: 15}}>
-                  <Text style={{color: C.muted, fontSize: 13, fontWeight: '700', letterSpacing: 1}}>CANCEL</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={onLogout} activeOpacity={0.7} style={{paddingVertical: 10, paddingHorizontal: 15}}>
-                  <Text style={{color: C.danger, fontSize: 13, fontWeight: '800', letterSpacing: 1}}>SIGN OUT</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       <View style={s.container}>
         <View style={s.ringWrapper}>
@@ -279,10 +247,13 @@ const LockProgressScreen: React.FC<Props> = ({isDark, flow, selection, onWarning
 
 const s = StyleSheet.create({
   safe: {flex: 1},
-  topBar: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-           paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm},
-  iconBtn: {width: 40, height: 40, borderRadius: 20, alignItems: 'center',
-            justifyContent: 'center'},
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   headerTitle: {fontSize: 13, fontWeight: '800', letterSpacing: 2},
   backBtn: {
     width: 40,
@@ -295,28 +266,6 @@ const s = StyleSheet.create({
   ringWrapper: {alignItems: 'center', marginBottom: 20},
   subLabel: {marginTop: 15, fontSize: 12, fontWeight: '700', letterSpacing: 3},
   stepsList: {width: '100%'},
-
-  // modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.xl,
-  },
-  modalCard: {
-    width: '100%',
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    padding: 0,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-  },
-  modalTitle:   {fontSize: 15, fontWeight: '700', letterSpacing: 0.5},
-  modalActions: {flexDirection: 'row', justifyContent: 'flex-end', gap: SPACING.sm},
 });
 
 export default LockProgressScreen;

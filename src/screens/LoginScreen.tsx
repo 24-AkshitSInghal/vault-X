@@ -42,14 +42,10 @@ interface Props {
 
 // ── Removed LockIcon block, using PNG image instead ─────────────────────────
 
-import { useDispatch } from 'react-redux';
-import { setCredentials } from '../store/slices/authSlice';
-
 // ── Main component ────────────────────────────────────────────────────────────
 const LoginScreen: React.FC<Props> = ({isDark, onToggleTheme, onLoginSuccess}) => {
   const C = getTheme(isDark);
-  const dispatch = useDispatch();
-  
+
   const [activeTab,    setActiveTab]    = useState<FlowType>('lock');
   const [uniqueId,     setUniqueId]     = useState('');
   const [password,     setPassword]     = useState('');
@@ -98,7 +94,6 @@ const LoginScreen: React.FC<Props> = ({isDark, onToggleTheme, onLoginSuccess}) =
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      dispatch(setCredentials({ loginId: uniqueId }));
       onLoginSuccess(activeTab);
     }, 1000);
   };
