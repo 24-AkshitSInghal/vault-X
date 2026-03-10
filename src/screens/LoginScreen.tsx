@@ -18,6 +18,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
 import {DUMMY_CREDENTIALS, FlowType} from '../constants/credentials';
 import {getTheme, RADIUS, SPACING} from '../constants/colors';
+import {GlobalHeader} from '../components/GlobalHeader';
 
 // ── Per-flow content config ───────────────────────────────────────────────────
 const FLOW_CONFIG = {
@@ -113,26 +114,25 @@ const LoginScreen: React.FC<Props> = ({isDark, onToggleTheme, onLoginSuccess}) =
     <SafeAreaView style={[s.safeArea, {backgroundColor: C.bg}]} edges={['top', 'bottom']}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={C.bg} />
 
-      {/* theme toggle */}
-      <View style={s.topBar}>
-        <TouchableOpacity
-          style={[s.themeBtn, {backgroundColor: C.surface, borderColor: C.border}]}
-          onPress={onToggleTheme}
-          activeOpacity={0.8}>
-          <MaterialIcon name={isDark ? 'weather-sunny' : 'weather-night'} size={18} color={C.subText} />
-        </TouchableOpacity>
-      </View>
+      <GlobalHeader 
+        isDark={isDark} 
+        onToggleTheme={onToggleTheme} 
+        onLogout={() => {}} 
+        showLogout={false}
+        showLogo={false}
+      />
 
       <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <Animated.View style={[s.container, {transform: [{translateX: shakeAnim}]}]}>
+        <View style={s.flex}>
+          <Animated.View style={[s.container, {transform: [{translateX: shakeAnim}]}]}>
 
           {/* ── Logo ── */}
           <View style={s.logoSection}>
             <Image 
               source={isDark ? require('../../assets/white-logo.png') : require('../../assets/black-logo.png')} 
-              style={{ width: 170, height: 130, resizeMode: 'contain', marginBottom: 8 }} 
+              style={s.logoImgStyle} 
             />
-            <Text style={[s.tagline, {color: C.muted}]}>Secure Container Management</Text>
+            <Text style={[s.tagline, {color: C.muted}]}>SECURE OPERATIONS</Text>
           </View>
 
           {/* ── Tabs ── */}
@@ -217,7 +217,8 @@ const LoginScreen: React.FC<Props> = ({isDark, onToggleTheme, onLoginSuccess}) =
             )}
           </TouchableOpacity>
 
-        </Animated.View>
+          </Animated.View>
+        </View>
       </KeyboardAvoidingView>
 
       {/* ── OTP Modal ── */}
@@ -265,33 +266,105 @@ const s = StyleSheet.create({
   topBar:   {alignItems: 'flex-end', paddingHorizontal: 24, paddingTop: 8, paddingBottom: 4},
   themeBtn: {width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 1},
 
-  container: {flex: 1, paddingHorizontal: 28, justifyContent: 'center', paddingBottom: 16},
+  container: {
+    flex: 1, 
+    paddingHorizontal: 28, 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    paddingBottom: 40,
+  },
 
   // logo
-  logoSection: {alignItems: 'center', marginBottom: 36},
-  logoText:    {fontSize: 34, fontWeight: '800', letterSpacing: 6},
-  tagline:     {fontSize: 11, letterSpacing: 2, marginTop: 4, textTransform: 'uppercase'},
+  logoSection: {
+    alignItems: 'center', 
+    marginBottom: 44,
+  },
+  logoImgStyle: { 
+    width: 220, 
+    height: 140, 
+    resizeMode: 'contain', 
+    marginBottom: 0,
+  },
+  tagline: {
+    fontSize: 10, 
+    letterSpacing: 4, 
+    marginTop: -10, 
+    textTransform: 'uppercase',
+    fontWeight: '800',
+    opacity: 0.7,
+  },
 
   // tabs
-  tabRow: {flexDirection: 'row', borderRadius: 50, padding: 4, marginBottom: 32, borderWidth: 1},
-  tab:    {flex: 1, flexDirection: 'row', paddingVertical: 11, borderRadius: 50, alignItems: 'center', justifyContent: 'center'},
-  tabIcon:{marginRight: 6},
-  tabText:{fontSize: 13, fontWeight: '600', letterSpacing: 1.5},
+  tabRow: {
+    flexDirection: 'row', 
+    borderRadius: RADIUS.pill, 
+    padding: 3, 
+    marginBottom: 36, 
+    borderWidth: 1,
+    width: '100%',
+    maxWidth: 260,
+  },
+  tab: {
+    flex: 1, 
+    flexDirection: 'row', 
+    paddingVertical: 10, 
+    borderRadius: RADIUS.pill, 
+    alignItems: 'center', 
+    justifyContent: 'center',
+  },
+  tabIcon:  {marginRight: 6},
+  tabText:  {fontSize: 11, fontWeight: '800', letterSpacing: 1.8},
 
   // form
-  card:         {marginBottom: 24},
-  formLabel:    {fontSize: 11, fontWeight: '700', letterSpacing: 2, marginBottom: 16},
-  inputWrapper: {flexDirection: 'row', alignItems: 'center', borderRadius: 12, borderWidth: 1, marginBottom: 12, paddingHorizontal: 16},
-  inputIcon:    {marginRight: 10},
-  input:        {flex: 1, height: 52, fontSize: 15, letterSpacing: 0.4},
-  inputPr:      {paddingRight: 8},
-  eyeBtn:       {padding: 4, justifyContent: 'center', alignItems: 'center'},
-  otpRow:       {flexDirection: 'row', alignSelf: 'flex-end', alignItems: 'center', paddingVertical: 4},
+  card: {
+    width: '100%',
+    marginBottom: 28,
+  },
+  formLabel: {
+    fontSize: 10, 
+    fontWeight: '800', 
+    letterSpacing: 2, 
+    marginBottom: 16,
+    textAlign: 'center',
+    opacity: 0.6,
+  },
+  inputWrapper: {
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    borderRadius: 16, 
+    borderWidth: 1.5, 
+    marginBottom: 14, 
+    paddingHorizontal: 16,
+    height: 56,
+  },
+  inputIcon: {marginRight: 10},
+  input: {
+    flex: 1, 
+    height: '100%', 
+    fontSize: 15, 
+    letterSpacing: 0.5,
+    fontWeight: '600',
+  },
+  inputPr: {paddingRight: 8},
+  eyeBtn:  {padding: 8, justifyContent: 'center', alignItems: 'center'},
+   otpRow:       {flexDirection: 'row', alignSelf: 'flex-end', alignItems: 'center', paddingVertical: 4},
   otpText:      {fontSize: 11, fontWeight: '600', letterSpacing: 1.5},
 
-  loginBtn:         {flexDirection: 'row', borderRadius: 14, paddingVertical: 17, alignItems: 'center', justifyContent: 'center', elevation: 4},
+  loginBtn: {
+    width: '100%',
+    flexDirection: 'row', 
+    borderRadius: 18, 
+    paddingVertical: 18, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
   loginBtnDisabled: {opacity: 0.5},
-  loginBtnText:     {fontSize: 14, fontWeight: '800', letterSpacing: 2.5},
+  loginBtnText:     {fontSize: 14, fontWeight: '900', letterSpacing: 3},
 
   // confirm selection modal
   modalOverlay: {

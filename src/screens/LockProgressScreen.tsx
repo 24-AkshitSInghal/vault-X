@@ -13,6 +13,7 @@ import MaterialIcon from '@react-native-vector-icons/material-design-icons';
 import {getTheme, RADIUS, SPACING} from '../constants/colors';
 import {FlowType} from '../constants/credentials';
 import Svg, {Circle} from 'react-native-svg';
+import {GlobalHeader} from '../components/GlobalHeader';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface Props {
@@ -21,6 +22,7 @@ interface Props {
   selection: 'container' | 'trailer';
   onWarning: () => void;
   onLogout: () => void;
+  onToggleTheme: () => void;
 }
 
 const STEPS = [
@@ -156,7 +158,7 @@ const sr = StyleSheet.create({
 });
 
 // ── Main Screen ───────────────────────────────────────────────────────────────
-const LockProgressScreen: React.FC<Props> = ({isDark, flow, selection, onWarning, onLogout}) => {
+const LockProgressScreen: React.FC<Props> = ({isDark, flow, selection, onWarning, onLogout, onToggleTheme}) => {
   const C = getTheme(isDark);
   const [progress, setProgress] = useState(0);
   const [stepData, setStepData] = useState<any[]>([]);
@@ -207,13 +209,11 @@ const LockProgressScreen: React.FC<Props> = ({isDark, flow, selection, onWarning
     <SafeAreaView style={[s.safe, {backgroundColor: C.bg}]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
-      <View style={s.header}>
-        <TouchableOpacity onPress={onLogout} style={[s.backBtn, {backgroundColor: C.surface}]}>
-          <MaterialIcon name="chevron-left" size={24} color={C.text} />
-        </TouchableOpacity>
-        <Text style={[s.headerTitle, {color: C.text}]}>OPERATION PROGRESS</Text>
-        <View style={{width: 40}} />
-      </View>
+      <GlobalHeader 
+        isDark={isDark} 
+        onToggleTheme={onToggleTheme} 
+        onLogout={onLogout} 
+      />
 
       <View style={s.container}>
         <View style={s.ringWrapper}>

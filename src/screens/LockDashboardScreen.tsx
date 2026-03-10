@@ -15,6 +15,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
 import {getTheme, RADIUS, SPACING} from '../constants/colors';
 import {FlowType} from '../constants/credentials';
+import {GlobalHeader} from '../components/GlobalHeader';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type SelectionType = 'container' | 'trailer' | null;
@@ -62,9 +63,10 @@ interface SlideProps {
   thumbColor: string;
   textColor:  string;
   trackBg:    string;
+  isDark:     boolean;
 }
 
-const SlideToConfirm = ({label, onConfirm, thumbColor, textColor, trackBg}: SlideProps) => {
+const SlideToConfirm = ({label, onConfirm, thumbColor, textColor, trackBg, isDark}: SlideProps) => {
   const thumbX    = useRef(new Animated.Value(0)).current;
   const trackW    = useRef(0);
   const confirmed = useRef(false);
@@ -82,31 +84,74 @@ const SlideToConfirm = ({label, onConfirm, thumbColor, textColor, trackBg}: Slid
       onPanResponderRelease: (_, gs) => {
         if (confirmed.current) {return;}
         const max = trackW.current - THUMB_SIZE - 8;
-        if (gs.dx >= max * 0.72) {
+        if (gs.dx >= max * 0.75) {
           confirmed.current = true;
-          Animated.timing(thumbX, {toValue: max, duration: 120, useNativeDriver: true}).start(() => {
+          Animated.timing(thumbX, {toValue: max, duration: 150, useNativeDriver: false}).start(() => {
             onConfirm();
             setTimeout(() => {
               confirmed.current = false;
               thumbX.setValue(0);
-            }, 500);
+            }, 600);
           });
         } else {
-          Animated.spring(thumbX, {toValue: 0, useNativeDriver: true, tension: 80, friction: 8}).start();
+          Animated.spring(thumbX, {
+            toValue: 0,
+            useNativeDriver: false,
+            bounciness: 0,
+          }).start();
         }
       },
     }),
   ).current;
 
+  // Progress fill color interpolation
+  const progressWidth = thumbX.interpolate({
+    inputRange: [0, 1000], // 1000 is a safe upper bound, real max is trackW
+    outputRange: [THUMB_SIZE, 1000 + THUMB_SIZE],
+  });
+
+  const textOpacity = thumbX.interpolate({
+    inputRange: [0, 80],
+    outputRange: [1, 0.2],
+    extrapolate: 'clamp',
+  });
+
   return (
     <View
       style={[slSt.track, {backgroundColor: trackBg}]}
       onLayout={e => { trackW.current = e.nativeEvent.layout.width; }}>
-      <Text style={[slSt.label, {color: textColor}]}>{label}</Text>
+      
+      {/* Dynamic Progress Fill */}
+      <Animated.View 
+        style={[
+          slSt.progressFill, 
+          { 
+            width: progressWidth,
+            backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+          }
+        ]} 
+      />
+
+      <Animated.Text style={[slSt.label, {color: textColor, opacity: textOpacity}]}>
+        {label}
+      </Animated.Text>
+
       <Animated.View
-        style={[slSt.thumb, {backgroundColor: thumbColor, transform: [{translateX: thumbX}]}]}
+        style={[
+          slSt.thumb, 
+          {
+            backgroundColor: thumbColor, 
+            transform: [{translateX: thumbX}],
+            shadowColor: thumbColor,
+            elevation: 8,
+          }
+        ]}
         {...pan.panHandlers}>
-        <MaterialIcon name="chevron-double-right" size={22} color={thumbColor === '#EF4444' ? '#0a0a0a' : '#000'} />
+        <MaterialIcon 
+          name="chevron-double-right" 
+          size={24} 
+          color={isDark ? '#000' : '#fff'} 
+        />
       </Animated.View>
     </View>
   );
@@ -114,20 +159,28 @@ const SlideToConfirm = ({label, onConfirm, thumbColor, textColor, trackBg}: Slid
 
 const slSt = StyleSheet.create({
   track: {
-    height: THUMB_SIZE + 8,
-    borderRadius: (THUMB_SIZE + 8) / 2,
+    height: THUMB_SIZE + 10,
+    borderRadius: (THUMB_SIZE + 10) / 2,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
     position: 'relative',
-    paddingHorizontal: 4,
+    paddingHorizontal: 5,
+  },
+  progressFill: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    borderRadius: (THUMB_SIZE + 10) / 2,
   },
   label: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1.5,
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 1.2,
     position: 'absolute',
     textAlign: 'center',
+    zIndex: 1,
   },
   thumb: {
     width: THUMB_SIZE,
@@ -136,7 +189,11 @@ const slSt = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'absolute',
-    left: 4,
+    left: 5,
+    zIndex: 2,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
 });
 
@@ -185,30 +242,11 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
     <SafeAreaView style={[s.safeArea, {backgroundColor: C.bg}]} edges={['top', 'bottom']}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={C.bg} />
 
-      {/* ── Top Bar ── */}
-      <View style={s.topBar}>
-        <View style={s.topBarLeft} />
-        <View style={s.headerLogo}>
-          <Image
-            source={isDark ? require('../../assets/white-logo.png') : require('../../assets/black-logo.png')}
-            style={{width: 200, height: 100, resizeMode: 'contain'}}
-          />
-        </View>
-        <View style={s.topBarRight}>
-          <TouchableOpacity
-            style={[s.iconBtn, {backgroundColor: C.surface, borderColor: C.border}]}
-            onPress={onToggleTheme}
-            activeOpacity={0.8}>
-            <MaterialIcon name={isDark ? 'weather-sunny' : 'weather-night'} size={16} color={C.subText} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[s.iconBtn, {backgroundColor: C.surface, borderColor: C.border, marginLeft: 8}]}
-            onPress={() => setLogoutModal(true)}
-            activeOpacity={0.8}>
-            <MaterialIcon name="logout-variant" size={16} color={C.subText} />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <GlobalHeader 
+        isDark={isDark} 
+        onToggleTheme={onToggleTheme} 
+        onLogout={onLogout} 
+      />
 
       {/* ── Body ── */}
       <View style={s.body}>
@@ -357,6 +395,7 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
                   thumbColor="#EF4444"
                   textColor="rgba(239,68,68,0.55)"
                   trackBg="rgba(239,68,68,0.12)"
+                  isDark={isDark}
                 />
               </View>
 
@@ -412,6 +451,7 @@ const LockDashboardScreen: React.FC<Props> = ({isDark, flow, onToggleTheme, onLo
                 thumbColor={C.text}
                 textColor={C.muted}
                 trackBg={C.surfaceHigh}
+                isDark={isDark}
               />
 
               {/* Cancel */}

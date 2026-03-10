@@ -12,12 +12,14 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
 import {getTheme, RADIUS, SPACING} from '../constants/colors';
 import Svg, {Circle} from 'react-native-svg';
+import {GlobalHeader} from '../components/GlobalHeader';
 
 interface Props {
   isDark: boolean;
   selection: 'container' | 'trailer';
   onComplete: () => void;
   onLogout: () => void;
+  onToggleTheme: () => void;
 }
 
 const STEPS = [
@@ -129,7 +131,7 @@ const sr = StyleSheet.create({
 });
 
 // ── Main Screen ───────────────────────────────────────────────────────────────
-const OpenProgressScreen: React.FC<Props> = ({isDark, selection, onComplete, onLogout}) => {
+const OpenProgressScreen: React.FC<Props> = ({isDark, selection, onComplete, onLogout, onToggleTheme}) => {
   const C = getTheme(isDark);
   const [progress, setProgress] = useState(0);
   const [stepData, setStepData] = useState<any[]>([]);
@@ -179,11 +181,11 @@ const OpenProgressScreen: React.FC<Props> = ({isDark, selection, onComplete, onL
     <SafeAreaView style={[s.safe, {backgroundColor: C.bg}]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
-      <View style={s.header}>
-        <View style={{width: 40}} />
-        <View style={{flex: 1}} />
-        <View style={{width: 40}} />
-      </View>
+      <GlobalHeader 
+        isDark={isDark} 
+        onToggleTheme={onToggleTheme} 
+        onLogout={onLogout} 
+      />
 
       <View style={s.container}>
         {showSuccess ? (

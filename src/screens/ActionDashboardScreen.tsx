@@ -13,6 +13,7 @@ import {
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
 import {getTheme, RADIUS, SPACING} from '../constants/colors';
+import {GlobalHeader} from '../components/GlobalHeader';
 
 interface Props {
   isDark: boolean;
@@ -20,16 +21,16 @@ interface Props {
   selection?: 'container' | 'trailer';
   onOpen: (container: string, seal: string) => void;
   onLogout: () => void;
+  onToggleTheme: () => void;
 }
 
 // ── Removed LockIcon block, using PNG image instead ─────────────────────────
 
-const ActionDashboardScreen: React.FC<Props> = ({isDark, flow, selection = 'container', onOpen, onLogout}) => {
+const ActionDashboardScreen: React.FC<Props> = ({isDark, flow, selection = 'container', onOpen, onLogout, onToggleTheme}) => {
   const C = getTheme(isDark);
   
   const [containerNum, setContainerNum] = React.useState('');
   const [sealNum, setSealNum] = React.useState('');
-  const [logoutModal, setLogoutModal] = React.useState(false);
 
   const isDisabled = !containerNum.trim() || !sealNum.trim();
 
@@ -42,50 +43,12 @@ const ActionDashboardScreen: React.FC<Props> = ({isDark, flow, selection = 'cont
     <SafeAreaView style={[s.safe, {backgroundColor: C.bg}]} edges={['top', 'bottom']}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={C.bg} />
 
-      {/* Top bar */}
-      <View style={s.topBar}>
-        <View style={{width: 40}} />
-        <View style={{alignItems: 'center'}}>
-          <Image 
-            source={isDark ? require('../../assets/white-logo.png') : require('../../assets/black-logo.png')} 
-             style={{ width: 160, height: 80, resizeMode: 'contain' }} 
-          />
-        </View>
-        <TouchableOpacity
-          style={[s.iconBtn, {backgroundColor: C.surface, borderColor: C.border}]}
-          onPress={() => setLogoutModal(true)}>
-          <MaterialIcon name="logout-variant" size={16} color={C.subText} />
-        </TouchableOpacity>
-      </View>
+      <GlobalHeader 
+        isDark={isDark} 
+        onToggleTheme={onToggleTheme} 
+        onLogout={onLogout} 
+      />
 
-      <Modal
-        visible={logoutModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setLogoutModal(false)}>
-        <View style={s.modalOverlay}>
-          <View style={[s.modalCard, {backgroundColor: C.surface, borderColor: C.border}]}>
-            <View style={{backgroundColor: C.surfaceHigh, paddingVertical: 12, paddingHorizontal: 16, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg }}>
-              <Text style={[s.modalTitle, {color: C.text, marginBottom: 0}]}>Sign Out</Text>
-            </View>
-
-            <View style={{padding: SPACING.lg}}>
-              <Text style={{color: C.subText, fontSize: 13, lineHeight: 22, marginTop: 4, marginBottom: 20}}>
-                Are you sure you want to sign out?
-              </Text>
-
-              <View style={s.modalActions}>
-                <TouchableOpacity onPress={() => setLogoutModal(false)} activeOpacity={0.7} style={{paddingVertical: 10, paddingHorizontal: 15}}>
-                  <Text style={{color: C.muted, fontSize: 13, fontWeight: '700', letterSpacing: 1}}>CANCEL</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={onLogout} activeOpacity={0.7} style={{paddingVertical: 10, paddingHorizontal: 15}}>
-                  <Text style={{color: C.danger, fontSize: 13, fontWeight: '800', letterSpacing: 1}}>SIGN OUT</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
         {/* Selected Pill */}
