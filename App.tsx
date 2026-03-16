@@ -12,10 +12,11 @@ import ActionDashboardScreen from './src/screens/ActionDashboardScreen';
 import OpenWarningScreen   from './src/screens/OpenWarningScreen';
 import OpenProgressScreen  from './src/screens/OpenProgressScreen';
 import FinalScreen         from './src/screens/FinalScreen';
+import BleDeviceScanScreen from './src/screens/BleDeviceScanScreen';
 import {FlowType}          from './src/constants/credentials';
 import {createSession, getSession, clearSession} from './src/utils/session';
 
-type Screen = 'login' | 'dashboard' | 'lockProgress' | 'lockWarning' | 'actionDashboard' | 'openWarning' | 'openProgress' | 'final';
+type Screen = 'login' | 'bleScan' | 'dashboard' | 'lockProgress' | 'lockWarning' | 'actionDashboard' | 'openWarning' | 'openProgress' | 'final';
 
 function App(): React.JSX.Element {
   const [isDark,     setIsDark]     = useState(true);
@@ -31,11 +32,7 @@ function App(): React.JSX.Element {
       const session = await getSession();
       if (session) {
         setFlow(session.flow);
-        if (session.flow === 'open') {
-          setScreen('actionDashboard');
-        } else {
-          setScreen('dashboard');
-        }
+        setScreen('bleScan');
       }
       setIsCheckingSession(false);
     };
@@ -62,12 +59,24 @@ function App(): React.JSX.Element {
           onLoginSuccess={async (f: FlowType, userId: string) => { 
             await createSession(userId, f);
             setFlow(f); 
-            if (f === 'open') {
+            setScreen('bleScan');
+          }}
+        />
+      )}
+
+      {screen === 'bleScan' && (
+        <BleDeviceScanScreen
+          isDark={isDark}
+          flow={flow}
+          onToggleTheme={toggleTheme}
+          onDeviceConnected={() => {
+            if (flow === 'open') {
               setScreen('actionDashboard');
             } else {
-              setScreen('dashboard'); 
+              setScreen('dashboard');
             }
           }}
+          onLogout={handleLogout}
         />
       )}
 

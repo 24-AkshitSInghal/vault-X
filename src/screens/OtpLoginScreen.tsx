@@ -157,7 +157,7 @@ const OtpLoginScreen: React.FC<Props> = ({ isDark, onToggleTheme, onLoginSuccess
                 source={isDark ? require('../../assets/white-logo.png') : require('../../assets/black-logo.png')}
                 style={s.logoImgStyle}
               />
-              <Text style={[s.tagline, { color: C.muted }]}>SECURE OPERATIONS</Text>
+              <Text style={[s.tagline, { color: C.muted }]}>SECURE CONTAINER MANAGEMENT</Text>
             </View>
 
             {/* ── Tabs ── */}
