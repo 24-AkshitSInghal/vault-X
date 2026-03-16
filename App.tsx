@@ -2,9 +2,9 @@
  * VaultX — Dock Container Lock/Unlock App
  */
 
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
-import LoginScreen         from './src/screens/LoginScreen';
+import OtpLoginScreen      from './src/screens/OtpLoginScreen';
 import LockDashboardScreen from './src/screens/LockDashboardScreen';
 import LockProgressScreen  from './src/screens/LockProgressScreen';
 import LockWarningScreen   from './src/screens/LockWarningScreen';
@@ -13,6 +13,7 @@ import OpenWarningScreen   from './src/screens/OpenWarningScreen';
 import OpenProgressScreen  from './src/screens/OpenProgressScreen';
 import FinalScreen         from './src/screens/FinalScreen';
 import {FlowType}          from './src/constants/credentials';
+import {createSession, getSession, clearSession} from './src/utils/session';
 
 type Screen = 'login' | 'dashboard' | 'lockProgress' | 'lockWarning' | 'actionDashboard' | 'openWarning' | 'openProgress' | 'final';
 
@@ -23,16 +24,43 @@ function App(): React.JSX.Element {
   const [selection,  setSelection]  = useState<'container' | 'trailer'>('container');
   const [containerNum, setContainerNum] = useState<string>('');
   const [sealNum,      setSealNum]      = useState<string>('');
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+
+  useEffect(() => {
+    const initSession = async () => {
+      const session = await getSession();
+      if (session) {
+        setFlow(session.flow);
+        if (session.flow === 'open') {
+          setScreen('actionDashboard');
+        } else {
+          setScreen('dashboard');
+        }
+      }
+      setIsCheckingSession(false);
+    };
+    initSession();
+  }, []);
+
+  const handleLogout = async () => {
+    await clearSession();
+    setScreen('login');
+  };
 
   const toggleTheme = () => setIsDark(v => !v);
+
+  if (isCheckingSession) {
+    return <SafeAreaProvider />;
+  }
 
   return (
     <SafeAreaProvider>
       {screen === 'login' && (
-        <LoginScreen
+        <OtpLoginScreen
           isDark={isDark}
           onToggleTheme={toggleTheme}
-          onLoginSuccess={f => { 
+          onLoginSuccess={async (f: FlowType, userId: string) => { 
+            await createSession(userId, f);
             setFlow(f); 
             if (f === 'open') {
               setScreen('actionDashboard');
@@ -48,7 +76,7 @@ function App(): React.JSX.Element {
           isDark={isDark}
           flow={flow}
           onToggleTheme={toggleTheme}
-          onLogout={() => setScreen('login')}
+          onLogout={handleLogout}
           onProceed={sel => { setSelection(sel); setScreen('lockProgress'); }}
         />
       )}
@@ -59,7 +87,7 @@ function App(): React.JSX.Element {
           flow={flow}
           selection={selection}
           onWarning={() => setScreen('lockWarning')}
-          onLogout={() => setScreen('login')}
+          onLogout={handleLogout}
           onToggleTheme={toggleTheme}
         />
       )}
@@ -70,7 +98,7 @@ function App(): React.JSX.Element {
           flow={flow}
           onConfirm={() => setScreen('actionDashboard')}
           onReset={() => setScreen('dashboard')}
-          onLogout={() => setScreen('login')}
+          onLogout={handleLogout}
           onToggleTheme={toggleTheme}
         />
       )}
@@ -89,7 +117,7 @@ function App(): React.JSX.Element {
               setScreen('final');
             }
           }}
-          onLogout={() => setScreen('login')}
+          onLogout={handleLogout}
           onToggleTheme={toggleTheme}
         />
       )}
@@ -99,7 +127,7 @@ function App(): React.JSX.Element {
           isDark={isDark}
           onYes={() => setScreen('openProgress')}
           onNo={() => setScreen('actionDashboard')}
-          onLogout={() => setScreen('login')}
+          onLogout={handleLogout}
           onToggleTheme={toggleTheme}
         />
       )}
@@ -109,7 +137,7 @@ function App(): React.JSX.Element {
           isDark={isDark}
           selection={selection}
           onComplete={() => setScreen('login')}
-          onLogout={() => setScreen('login')}
+          onLogout={handleLogout}
           onToggleTheme={toggleTheme}
         />
       )}
@@ -119,7 +147,7 @@ function App(): React.JSX.Element {
           isDark={isDark}
           containerNum={containerNum}
           sealNum={sealNum}
-          onLogout={() => setScreen('login')}
+          onLogout={handleLogout}
           onToggleTheme={toggleTheme}
         />
       )}
