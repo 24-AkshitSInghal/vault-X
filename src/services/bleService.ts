@@ -1,8 +1,10 @@
 import { BleManager, Device, State, BleError } from 'react-native-ble-plx';
 import { Platform, PermissionsAndroid } from 'react-native';
+import { Buffer } from 'buffer';
 
 class BLEService {
   manager: BleManager;
+  connectedDevice: Device | null = null;
 
   constructor() {
     this.manager = new BleManager();
@@ -51,6 +53,37 @@ class BLEService {
         resolve(state === State.PoweredOn);
       });
     });
+  }
+
+  async sendCommand(hexCommand: string): Promise<boolean> {
+    try {
+      const device = this.connectedDevice;
+      if (!device || !(await device.isConnected())) {
+        console.warn('sendBleCommand: No connected device');
+        return false;
+      }
+      
+      const base64Payload = Buffer.from(hexCommand.replace('0x', ''), 'hex').toString('base64');
+
+      const services = await device.services();
+      for (const service of services) {
+        const characteristics = await service.characteristics();
+        for (const char of characteristics) {
+          if (char.isWritableWithoutResponse) {
+            await char.writeWithoutResponse(base64Payload);
+            return true;
+          } else if (char.isWritableWithResponse) {
+            await char.writeWithResponse(base64Payload);
+            return true;
+          }
+        }
+      }
+      console.warn('sendBleCommand: No writable characteristic found');
+      return false;
+    } catch (error) {
+      console.warn('sendBleCommand Error:', error);
+      return false;
+    }
   }
 }
 

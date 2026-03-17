@@ -7,24 +7,32 @@ import {
   StatusBar,
   Image,
   Modal,
+  Platform,
+  PermissionsAndroid,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
 import {getTheme, RADIUS, SPACING} from '../constants/colors';
 import {GlobalHeader} from '../components/GlobalHeader';
+import Geolocation from 'react-native-geolocation-service';
+import bleService from '../services/bleService';
 
 interface Props {
   isDark: boolean;
+  flow: 'lock' | 'open';
   containerNum: string;
   sealNum: string;
+  userId: string;
+  capturedImage?: string | null;
   onLogout: () => void;
   onToggleTheme: () => void;
 }
 
-const FinalScreen: React.FC<Props> = ({isDark, containerNum, sealNum, onLogout, onToggleTheme}) => {
+const FinalScreen: React.FC<Props> = ({isDark, flow, containerNum, sealNum, userId, capturedImage, onLogout, onToggleTheme}) => {
   const C = getTheme(isDark);
   const [currentDate, setCurrentDate] = useState('');
   const [currentTime, setCurrentTime] = useState('');
+  const [gpsLocation, setGpsLocation] = useState('Fetching...');
 
   useEffect(() => {
     const now = new Date();
@@ -39,6 +47,44 @@ const FinalScreen: React.FC<Props> = ({isDark, containerNum, sealNum, onLogout, 
       hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
     });
     setCurrentTime(timeStr);
+
+    const requestLocationPermission = async () => {
+      if (Platform.OS === 'ios') {
+        const auth = await Geolocation.requestAuthorization('whenInUse');
+        if (auth === 'granted') {
+          getLocation();
+        } else {
+          setGpsLocation('Permission Denied');
+        }
+      } else if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          getLocation();
+        } else {
+          setGpsLocation('Permission Denied');
+        }
+      }
+    };
+
+    const getLocation = () => {
+      Geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const latDir = latitude >= 0 ? 'N' : 'S';
+          const lonDir = longitude >= 0 ? 'E' : 'W';
+          setGpsLocation(`${Math.abs(latitude).toFixed(5)}°${latDir}, ${Math.abs(longitude).toFixed(5)}°${lonDir}`);
+        },
+        (error) => {
+          console.warn('Geolocation Error:', error.code, error.message);
+          setGpsLocation('Location Unavailable');
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+      );
+    };
+
+    requestLocationPermission();
   }, []);
 
   return (
@@ -56,7 +102,7 @@ const FinalScreen: React.FC<Props> = ({isDark, containerNum, sealNum, onLogout, 
         {/* Verification Image Box */}
         <View style={[s.cameraBox, {backgroundColor: C.surfaceHigh, borderColor: C.border}]}>
           <Image 
-            source={require('../../assets/demophoto.jpeg')} 
+            source={capturedImage ? {uri: capturedImage} : require('../../assets/demophoto.jpeg')} 
             style={s.cameraImage} 
             resizeMode="cover" 
           />
@@ -67,6 +113,20 @@ const FinalScreen: React.FC<Props> = ({isDark, containerNum, sealNum, onLogout, 
         {/* Data Card */}
         <View style={[s.dataCard, {backgroundColor: C.surfaceHigh, borderColor: C.border}]}>
           
+          <View style={[s.dataRow, { borderBottomWidth: 1, borderBottomColor: C.border, paddingBottom: 10, marginBottom: 5 }]}>
+            <Text style={[s.dataLabel, {color: C.text, fontSize: 14}]}>Status:</Text>
+            <View style={{backgroundColor: flow === 'lock' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8}}>
+              <Text style={[s.dataValue, {color: flow === 'lock' ? '#10B981' : '#F59E0B', fontWeight: '900', letterSpacing: 1}]}>
+                {flow === 'lock' ? 'LOCKED' : 'UNLOCKED'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={s.dataRow}>
+            <Text style={[s.dataLabel, {color: C.subText}]}>Login ID:</Text>
+            <Text style={[s.dataValue, {color: C.text}]}>{userId}</Text>
+          </View>
+
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, {color: C.subText}]}>Date:</Text>
             <Text style={[s.dataValue, {color: C.text}]}>{currentDate}</Text>
@@ -79,17 +139,12 @@ const FinalScreen: React.FC<Props> = ({isDark, containerNum, sealNum, onLogout, 
 
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, {color: C.subText}]}>GPS:</Text>
-            <Text style={[s.dataValue, {color: C.text}]}>34.05.22.1N, 118.14.37.0W</Text>
+            <Text style={[s.dataValue, {color: C.text}]}>{gpsLocation}</Text>
           </View>
 
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, {color: C.subText}]}>Battery:</Text>
             <Text style={[s.dataValue, {color: C.text}]}>97%</Text>
-          </View>
-
-          <View style={s.dataRow}>
-            <Text style={[s.dataLabel, {color: C.subText}]}>Lock SN:</Text>
-            <Text style={[s.dataValue, {color: C.text}]}>CL001</Text>
           </View>
 
           <View style={s.dataRow}>
@@ -100,6 +155,11 @@ const FinalScreen: React.FC<Props> = ({isDark, containerNum, sealNum, onLogout, 
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, {color: C.subText}]}>Seal #:</Text>
             <Text style={[s.dataValue, {color: C.text}]}>{sealNum}</Text>
+          </View>
+
+          <View style={s.dataRow}>
+            <Text style={[s.dataLabel, {color: C.subText}]}>Lock SN:</Text>
+            <Text style={[s.dataValue, {color: C.text, flex: 1, textAlign: 'right', marginLeft: 10}]} adjustsFontSizeToFit numberOfLines={1}>{bleService.connectedDevice?.id || 'Unknown'}</Text>
           </View>
 
         </View>
@@ -132,7 +192,7 @@ const s = StyleSheet.create({
   },
 
   cameraBox: {
-    height: 140, 
+    height: 240, 
     borderRadius: RADIUS.lg, 
     borderWidth: 1, 
     overflow: 'hidden', 
@@ -168,7 +228,8 @@ const s = StyleSheet.create({
   dataRow: {
     flexDirection: 'row', 
     justifyContent: 'space-between', 
-    paddingVertical: 5
+    paddingVertical: 5,
+    alignItems: 'center'
   },
   dataLabel: {
     fontSize: 13, 

@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Animated,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
@@ -38,6 +39,7 @@ const BleDeviceScanScreen: React.FC<Props> = ({
   const [isScanning, setIsScanning] = useState(false);
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [statusText, setStatusText] = useState('Initializing...');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Animations
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -84,7 +86,9 @@ const BleDeviceScanScreen: React.FC<Props> = ({
     setIsScanning(true);
     setStatusText('Scanning for nearby devices...');
     
-    bleService.manager.startDeviceScan(null, null, (error, scannedDevice) => {
+    const TARGET_SERVICE_UUID = 'f000fff0-0451-4000-b000-000000000000';
+
+    bleService.manager.startDeviceScan([TARGET_SERVICE_UUID], null, (error, scannedDevice) => {
       if (error) {
         console.warn('BLE Scan Error', error);
         setIsScanning(false);
@@ -125,6 +129,8 @@ const BleDeviceScanScreen: React.FC<Props> = ({
       const connectedDevice = await device.connect();
       await connectedDevice.discoverAllServicesAndCharacteristics();
       
+      bleService.connectedDevice = connectedDevice;
+      
       setStatusText('Connected Successfully!');
       setTimeout(() => {
         onDeviceConnected();
@@ -157,8 +163,31 @@ const BleDeviceScanScreen: React.FC<Props> = ({
           <Text style={[s.subtitle, { color: connectingId ? C.warning : C.muted }]}>{statusText}</Text>
         </View>
 
+        <View style={[s.searchContainer, { backgroundColor: C.surface, borderColor: C.border }]}>
+          <MaterialIcon name="magnify" size={20} color={C.muted} style={s.searchIcon} />
+          <TextInput
+            style={[s.searchInput, { color: C.text }]}
+            placeholder="Search devices..."
+            placeholderTextColor={C.placeholder}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={s.clearBtn}>
+              <MaterialIcon name="close" size={18} color={C.muted} />
+            </TouchableOpacity>
+          )}
+        </View>
+
         <FlatList
-          data={devices}
+          data={devices.filter((device) => {
+            const term = searchQuery.toLowerCase();
+            const name = (device.name || 'Unknown Device').toLowerCase();
+            const id = device.id.toLowerCase();
+            return name.includes(term) || id.includes(term);
+          })}
           keyExtractor={(item) => item.id}
           contentContainerStyle={s.listContent}
           renderItem={({ item }) => (
@@ -196,6 +225,17 @@ const BleDeviceScanScreen: React.FC<Props> = ({
             </Text>
           </TouchableOpacity>
         )}
+
+        {/* ── DEV SKIP BUTTON (development only) ── */}
+        {__DEV__ && !connectingId && (
+          <TouchableOpacity
+            style={{ marginTop: 15, padding: 15, backgroundColor: 'rgba(255,0,0,0.1)', borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'red', alignItems: 'center' }}
+            onPress={() => onDeviceConnected()}
+          >
+            <Text style={{ color: 'red', fontWeight: 'bold', textAlign: 'center', letterSpacing: 1 }}>SKIP BLE (DEV)</Text>
+          </TouchableOpacity>
+        )}
+
       </View>
     </SafeAreaView>
   );
@@ -232,6 +272,28 @@ const s = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     letterSpacing: 0.5,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: RADIUS.lg,
+    borderWidth: 1.5,
+    paddingHorizontal: 16,
+    height: 50,
+    marginBottom: SPACING.md,
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    height: '100%',
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  clearBtn: {
+    padding: 8,
   },
   listContent: {
     paddingBottom: SPACING.xl,

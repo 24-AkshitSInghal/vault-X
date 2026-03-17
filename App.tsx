@@ -25,12 +25,15 @@ function App(): React.JSX.Element {
   const [selection,  setSelection]  = useState<'container' | 'trailer'>('container');
   const [containerNum, setContainerNum] = useState<string>('');
   const [sealNum,      setSealNum]      = useState<string>('');
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string>('');
   const [isCheckingSession, setIsCheckingSession] = useState(true);
 
   useEffect(() => {
     const initSession = async () => {
       const session = await getSession();
       if (session) {
+        setUserId(session.userId);
         setFlow(session.flow);
         setScreen('bleScan');
       }
@@ -56,8 +59,9 @@ function App(): React.JSX.Element {
         <OtpLoginScreen
           isDark={isDark}
           onToggleTheme={toggleTheme}
-          onLoginSuccess={async (f: FlowType, userId: string) => { 
-            await createSession(userId, f);
+          onLoginSuccess={async (f: FlowType, uid: string) => { 
+            await createSession(uid, f);
+            setUserId(uid);
             setFlow(f); 
             setScreen('bleScan');
           }}
@@ -117,9 +121,11 @@ function App(): React.JSX.Element {
           isDark={isDark}
           flow={flow}
           selection={selection}
-          onOpen={(container, seal) => {
-            setContainerNum(container);
-            setSealNum(seal);
+          userId={userId}
+          onOpen={(cNum, sNum, imgUri) => { 
+            setContainerNum(cNum); 
+            setSealNum(sNum); 
+            if (imgUri) setCapturedImage(imgUri);
             if (flow === 'open') {
               setScreen('openWarning');
             } else {
@@ -145,7 +151,7 @@ function App(): React.JSX.Element {
         <OpenProgressScreen
           isDark={isDark}
           selection={selection}
-          onComplete={() => setScreen('login')}
+          onComplete={() => setScreen('final')}
           onLogout={handleLogout}
           onToggleTheme={toggleTheme}
         />
@@ -154,8 +160,11 @@ function App(): React.JSX.Element {
       {screen === 'final' && (
         <FinalScreen
           isDark={isDark}
+          flow={flow}
           containerNum={containerNum}
           sealNum={sealNum}
+          capturedImage={capturedImage}
+          userId={userId}
           onLogout={handleLogout}
           onToggleTheme={toggleTheme}
         />

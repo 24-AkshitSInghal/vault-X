@@ -8,9 +8,10 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   Platform,
-  Animated,
   Image,
   Modal,
+  Animated,
+  PermissionsAndroid,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
@@ -19,6 +20,7 @@ import { getTheme, RADIUS, SPACING } from '../constants/colors';
 import { GlobalHeader } from '../components/GlobalHeader';
 import { validateOTP } from '../utils/otpValidator';
 import userSecrets from '../data/userSecrets.json';
+import Geolocation from 'react-native-geolocation-service';
 
 // ── Per-flow content config ───────────────────────────────────────────────────
 const FLOW_CONFIG = {
@@ -55,6 +57,27 @@ const OtpLoginScreen: React.FC<Props> = ({ isDark, onToggleTheme, onLoginSuccess
   const [modalMessage, setModalMessage] = useState('');
 
   const flow = FLOW_CONFIG[activeTab];
+
+  // Request permissions on startup
+  useEffect(() => {
+    const requestInitialPermissions = async () => {
+      try {
+        if (Platform.OS === 'ios') {
+          await Geolocation.requestAuthorization('whenInUse');
+        } else if (Platform.OS === 'android') {
+          await PermissionsAndroid.requestMultiple([
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            PermissionsAndroid.PERMISSIONS.CAMERA,
+            PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+            PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+          ]);
+        }
+      } catch (err) {
+        console.warn('Failed to pre-request permissions', err);
+      }
+    };
+    requestInitialPermissions();
+  }, []);
 
   // ── Subtle shake on tab switch ─────────────────────────────────────────────
   const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -122,9 +145,40 @@ const OtpLoginScreen: React.FC<Props> = ({ isDark, onToggleTheme, onLoginSuccess
 
     setLoading(true);
 
-    // Simulate slight delay for offline local check
-    setTimeout(() => {
+    const checkPermissions = async (): Promise<boolean> => {
+      try {
+        if (Platform.OS === 'ios') {
+          const auth = await Geolocation.requestAuthorization('whenInUse');
+          if (auth !== 'granted') return false;
+          // Note: iOS camera permission is inherently requested by image-picker, but we can't easily strictly pre-request it without the picker or a dedicated lib. We assume fine for iOS here or rely on the picker. But we should block if location is denied.
+          return true;
+        } else if (Platform.OS === 'android') {
+          const granted = await PermissionsAndroid.requestMultiple([
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            PermissionsAndroid.PERMISSIONS.CAMERA,
+            PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+            PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+          ]);
+          return (
+            granted[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION] === PermissionsAndroid.RESULTS.GRANTED &&
+            granted[PermissionsAndroid.PERMISSIONS.CAMERA] === PermissionsAndroid.RESULTS.GRANTED
+          );
+        }
+        return false;
+      } catch (err) {
+        return false;
+      }
+    };
+
+    setTimeout(async () => {
+      const permsGranted = await checkPermissions();
       setLoading(false);
+
+      if (!permsGranted) {
+        showError('Camera and Location permissions are required to log in and use this app.', 'denied');
+        return;
+      }
+
       const isValid = validateOTP(otpToken.trim(), userSecret);
       if (isValid) {
         onLoginSuccess(activeTab, uniqueId.trim());
@@ -253,6 +307,16 @@ const OtpLoginScreen: React.FC<Props> = ({ isDark, onToggleTheme, onLoginSuccess
                     <Text style={[s.loginBtnText, { color: C.btnText }]}>LOGIN</Text>
                   </>
                 )}
+              </TouchableOpacity>
+            )}
+
+            {/* ── DEV SKIP BUTTON (development only) ── */}
+            {__DEV__ && (
+              <TouchableOpacity
+                style={{ marginTop: 20, padding: 15, backgroundColor: 'rgba(255,0,0,0.1)', borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'red', alignItems: 'center', width: '100%' }}
+                onPress={() => onLoginSuccess(activeTab, 'dev-admin')}
+              >
+                <Text style={{ color: 'red', fontWeight: 'bold', textAlign: 'center', letterSpacing: 1 }}>SKIP LOGIN (DEV)</Text>
               </TouchableOpacity>
             )}
 

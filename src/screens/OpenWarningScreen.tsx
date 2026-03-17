@@ -7,10 +7,13 @@ import {
   StatusBar,
   Image,
   Modal,
+  Animated,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {getTheme, RADIUS, SPACING} from '../constants/colors';
 import {GlobalHeader} from '../components/GlobalHeader';
+import {SlideToConfirm} from '../components/SlideToConfirm';
+import bleService from '../services/bleService';
 
 interface Props {
   isDark: boolean;
@@ -24,6 +27,34 @@ interface Props {
 
 const OpenWarningScreen: React.FC<Props> = ({isDark, onYes, onNo, onLogout, onToggleTheme}) => {
   const C = getTheme(isDark);
+
+  const [toastMsg,  setToastMsg]  = React.useState<string | null>(null);
+  const toastAnim = React.useRef(new Animated.Value(0)).current;
+
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    toastAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(toastAnim, {toValue: 1, duration: 250, useNativeDriver: true}),
+      Animated.delay(1200),
+      Animated.timing(toastAnim, {toValue: 0, duration: 250, useNativeDriver: true}),
+    ]).start(() => setToastMsg(null));
+  };
+
+  const confirmProceed = async () => {
+    const hexCommand = '0x57004300';
+    const sent = await bleService.sendCommand(hexCommand);
+    
+    if (sent) {
+      showToast('Command Sent');
+    } else {
+      showToast('Device Not Connected');
+    }
+
+    setTimeout(() => {
+      onYes();
+    }, 1000);
+  };
 
   return (
     <SafeAreaView style={[s.safe, {backgroundColor: C.bg}]} edges={['top', 'bottom']}>
@@ -41,14 +72,28 @@ const OpenWarningScreen: React.FC<Props> = ({isDark, onYes, onNo, onLogout, onTo
         <Text style={[s.messageText, {color: C.text}]}>OPEN WILL UNLOCK THE DOORS</Text>
         <Text style={[s.messageText, {color: C.text, marginBottom: 70}]}>DO YOU WANT TO CONTINUE?</Text>
 
-        <TouchableOpacity style={[s.btn, {backgroundColor: '#10B981'}]} onPress={onYes} activeOpacity={0.8}>
-          <Text style={[s.btnText, {color: '#FFFFFF'}]}>YES</Text>
-        </TouchableOpacity>
+        <View style={{ marginBottom: SPACING.md }}>
+          <SlideToConfirm
+            label="SLIDE TO OPEN"
+            onConfirm={confirmProceed}
+            thumbColor="#10B981"
+            textColor="rgba(16,185,129,0.55)"
+            trackBg="rgba(16,185,129,0.12)"
+            isDark={isDark}
+          />
+        </View>
 
-        <TouchableOpacity style={[s.btn, {backgroundColor: '#EF4444', marginTop: SPACING.md}]} onPress={onNo} activeOpacity={0.8}>
-          <Text style={[s.btnText, {color: '#FFFFFF'}]}>NO</Text>
+        <TouchableOpacity style={[s.btn, {backgroundColor: 'transparent'}]} onPress={onNo} activeOpacity={0.8}>
+          <Text style={[s.btnText, {color: '#EF4444'}]}>CANCEL</Text>
         </TouchableOpacity>
       </View>
+
+      {/* ── Floating Notification Toast ── */}
+      {toastMsg && (
+        <Animated.View style={[s.toastCard, {opacity: toastAnim, backgroundColor: isDark ? '#111' : '#fff'}]}>
+          <Text style={[s.toastText, {color: C.text}]}>{toastMsg}</Text>
+        </Animated.View>
+      )}
     </SafeAreaView>
   );
 };
@@ -61,10 +106,20 @@ const s = StyleSheet.create({
   iconBtn: {width: 36, height: 36, borderRadius: 18, alignItems: 'center',
             justifyContent: 'center', borderWidth: 1},
   content: {flex: 1, paddingHorizontal: SPACING.xl, justifyContent: 'center', paddingBottom: 60},
-  warningText: {color: '#F59E0B', fontSize: 24, fontWeight: '900', letterSpacing: 2, textAlign: 'center', marginBottom: SPACING.xl},
+  warningText: {color: '#EF4444', fontSize: 24, fontWeight: '900', letterSpacing: 2, textAlign: 'center', marginBottom: SPACING.xl},
   messageText: {fontSize: 14, fontWeight: '700', letterSpacing: 0.5, textAlign: 'center', marginBottom: SPACING.md},
-  btn: {alignItems: 'center', justifyContent: 'center', paddingVertical: 18, borderRadius: RADIUS.pill, elevation: 2},
+  btn: {alignItems: 'center', justifyContent: 'center', paddingVertical: 18, borderRadius: RADIUS.pill, elevation: 2, borderWidth: 1, borderColor: '#EF4444'},
   btnText: {fontSize: 15, fontWeight: '800', letterSpacing: 2},
+
+  toastCard: {
+    position: 'absolute',
+    top: 100,
+    alignSelf: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: RADIUS.pill,
+  },
+  toastText: {fontSize: 13, fontWeight: '700', letterSpacing: 1},
 
   // modal
   modalOverlay: {

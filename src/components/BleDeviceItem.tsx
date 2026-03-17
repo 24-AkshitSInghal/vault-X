@@ -37,7 +37,7 @@ export const BleDeviceItem: React.FC<BleDeviceItemProps> = ({
         <MaterialIcon name="bluetooth" size={24} color={C.text} style={styles.icon} />
         <View style={styles.textWrapper}>
           <Text style={[styles.nameText, { color: C.text }]}>{name}</Text>
-          <Text style={[styles.idText, { color: C.muted }]}>Device ID: {device.id}</Text>
+          <Text style={[styles.idText, { color: C.muted }]}>MAC ID: {device.id}</Text>
         </View>
       </View>
       <View style={[styles.connectBadge, { backgroundColor: isThisDeviceConnecting ? C.warning : C.btnBg }]}>

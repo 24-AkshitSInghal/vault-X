@@ -9,34 +9,128 @@ import {
   Image,
   TextInput,
   Modal,
+  Platform,
+  PermissionsAndroid,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
 import {getTheme, RADIUS, SPACING} from '../constants/colors';
 import {GlobalHeader} from '../components/GlobalHeader';
+import Geolocation from 'react-native-geolocation-service';
+import bleService from '../services/bleService';
+import {launchCamera} from 'react-native-image-picker';
 
 interface Props {
   isDark: boolean;
   flow: 'lock' | 'open';
   selection?: 'container' | 'trailer';
-  onOpen: (container: string, seal: string) => void;
+  userId: string;
+  onOpen: (container: string, seal: string, imageUri?: string) => void;
   onLogout: () => void;
   onToggleTheme: () => void;
 }
 
 // ── Removed LockIcon block, using PNG image instead ─────────────────────────
 
-const ActionDashboardScreen: React.FC<Props> = ({isDark, flow, selection = 'container', onOpen, onLogout, onToggleTheme}) => {
+const ActionDashboardScreen: React.FC<Props> = ({isDark, flow, selection = 'container', userId, onOpen, onLogout, onToggleTheme}) => {
   const C = getTheme(isDark);
   
   const [containerNum, setContainerNum] = React.useState('');
   const [sealNum, setSealNum] = React.useState('');
+  const [gpsLocation, setGpsLocation] = React.useState('Fetching...');
+  const [imageUri, setImageUri] = React.useState<string | null>(null);
+  const [currentDate, setCurrentDate] = React.useState('');
+  const [currentTime, setCurrentTime] = React.useState('');
 
-  const isDisabled = !containerNum.trim() || !sealNum.trim();
+  React.useEffect(() => {
+    const now = new Date();
+    // Format Date: Mar 08, 2026
+    const dateStr = now.toLocaleDateString('en-US', {
+      month: 'short', day: '2-digit', year: 'numeric'
+    });
+    setCurrentDate(dateStr);
+
+    // Format Time: 01:36:24 PM
+    const timeStr = now.toLocaleTimeString('en-US', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+    });
+    setCurrentTime(timeStr);
+
+    const requestLocationPermission = async () => {
+      if (Platform.OS === 'ios') {
+        const auth = await Geolocation.requestAuthorization('whenInUse');
+        if (auth === 'granted') {
+          getLocation();
+        } else {
+          setGpsLocation('Permission Denied');
+        }
+      } else if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          getLocation();
+        } else {
+          setGpsLocation('Permission Denied');
+        }
+      }
+    };
+
+    const getLocation = () => {
+      Geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const latDir = latitude >= 0 ? 'N' : 'S';
+          const lonDir = longitude >= 0 ? 'E' : 'W';
+          setGpsLocation(`${Math.abs(latitude).toFixed(5)}°${latDir}, ${Math.abs(longitude).toFixed(5)}°${lonDir}`);
+        },
+        (error) => {
+          console.warn('Geolocation Error:', error.code, error.message);
+          setGpsLocation('Location Unavailable');
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+      );
+    };
+
+    requestLocationPermission();
+  }, []);
+
+  const handleCameraLaunch = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+        {
+          title: "Camera Permission",
+          message: "App needs camera permission to capture container verification photos",
+          buttonPositive: "OK"
+        }
+      );
+      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+        return;
+      }
+    }
+
+    launchCamera({
+      mediaType: 'photo',
+      cameraType: 'back',
+      quality: 0.8,
+    }, (response) => {
+      if (response.didCancel) return;
+      if (response.errorCode) {
+        console.warn('Camera Error: ', response.errorMessage);
+        return;
+      }
+      if (response.assets && response.assets.length > 0) {
+        setImageUri(response.assets[0].uri || null);
+      }
+    });
+  };
+
+  const isDisabled = !containerNum.trim() || !sealNum.trim() || !imageUri;
 
   const handleConfirm = () => {
     if (isDisabled) return;
-    onOpen(containerNum, sealNum);
+    onOpen(containerNum, sealNum, imageUri || undefined);
   };
 
   return (
@@ -77,28 +171,43 @@ const ActionDashboardScreen: React.FC<Props> = ({isDark, flow, selection = 'cont
           autoCapitalize="characters"
         />
 
-        {/* Camera Box with actual image */}
-        <View style={[s.cameraBox, {backgroundColor: C.surfaceHigh, borderColor: C.border, overflow: 'hidden'}]}>
-          <Image 
-            source={require('../../assets/demophoto.jpeg')} 
-            style={s.cameraImage} 
-            resizeMode="cover" 
-          />
-        </View>
+        {/* Camera Box */}
+        <TouchableOpacity 
+          style={[s.cameraBox, {backgroundColor: C.surfaceHigh, borderColor: C.border, overflow: 'hidden'}]}
+          activeOpacity={0.8}
+          onPress={handleCameraLaunch}
+        >
+          {imageUri ? (
+            <Image 
+              source={{uri: imageUri}} 
+              style={s.cameraImage} 
+              resizeMode="cover" 
+            />
+          ) : (
+            <View style={{alignItems: 'center', justifyContent: 'center', flex: 1}}>
+              <MaterialIcon name="camera" size={40} color={C.muted} style={{marginBottom: 8}} />
+              <Text style={{color: C.muted, fontSize: 13, fontWeight: '700'}}>Click to Take Picture</Text>
+            </View>
+          )}
+        </TouchableOpacity>
 
         {/* Data Card */}
         <View style={[s.dataCard, {backgroundColor: C.surface, borderColor: C.border}]}>
           <View style={s.dataRow}>
+            <Text style={[s.dataLabel, {color: C.text}]}>Login ID:</Text>
+            <Text style={[s.dataValue, {color: C.text}]}>{userId}</Text>
+          </View>
+          <View style={s.dataRow}>
             <Text style={[s.dataLabel, {color: C.text}]}>Date:</Text>
-            <Text style={[s.dataValue, {color: C.text}]}>Mar 08, 2026</Text>
+            <Text style={[s.dataValue, {color: C.text}]}>{currentDate}</Text>
           </View>
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, {color: C.text}]}>Time:</Text>
-            <Text style={[s.dataValue, {color: C.text}]}>01:05:59 PM</Text>
+            <Text style={[s.dataValue, {color: C.text}]}>{currentTime}</Text>
           </View>
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, {color: C.text}]}>GPS:</Text>
-            <Text style={[s.dataValue, {color: C.text}]}>31.44.10.1N, 118.15.5.8W</Text>
+            <Text style={[s.dataValue, {color: C.text}]}>{gpsLocation}</Text>
           </View>
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, {color: C.text}]}>Battery Level:</Text>
@@ -106,11 +215,13 @@ const ActionDashboardScreen: React.FC<Props> = ({isDark, flow, selection = 'cont
           </View>
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, {color: C.text}]}>Lock SN:</Text>
-            <Text style={[s.dataValue, {color: C.text}]}>CL001</Text>
+            <Text style={[s.dataValue, {color: C.text, flex: 1, textAlign: 'right', marginLeft: 10}]} adjustsFontSizeToFit numberOfLines={1}>{bleService.connectedDevice?.id || 'Unknown'}</Text>
           </View>
         </View>
+      </ScrollView>
 
-        {/* Confirm Button (Only in Flow 1) */}
+      {/* Fixed Footer Buttons */}
+      <View style={[s.footerContainer, { backgroundColor: C.bg }]}>
         {flow === 'lock' && (
           <TouchableOpacity 
            style={[s.btn, {backgroundColor: C.text, elevation: isDisabled ? 0 : 4, opacity: isDisabled ? 0.4 : 1}]} 
@@ -122,7 +233,6 @@ const ActionDashboardScreen: React.FC<Props> = ({isDark, flow, selection = 'cont
           </TouchableOpacity>
         )}
 
-        {/* Open Button (Only in Flow 2) */}
         {flow === 'open' && (
           <TouchableOpacity 
             style={[s.btn, {backgroundColor: C.text, elevation: isDisabled ? 0 : 4, opacity: isDisabled ? 0.4 : 1}]} 
@@ -133,7 +243,7 @@ const ActionDashboardScreen: React.FC<Props> = ({isDark, flow, selection = 'cont
             <Text style={[s.btnText, {color: C.bg}]}>OPEN</Text>
           </TouchableOpacity>
         )}
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -164,15 +274,20 @@ const s = StyleSheet.create({
     textAlign: 'center',
   },
 
-  cameraBox: {height: 130, borderRadius: RADIUS.lg, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginBottom: 10},
+  cameraBox: {height: 240, borderRadius: RADIUS.lg, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginBottom: 10},
   cameraImage: {width: '100%', height: '100%'},
 
   dataCard: {padding: SPACING.md, borderRadius: RADIUS.lg, borderWidth: 1, marginBottom: 12},
-  dataRow: {flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4},
+  dataRow: {flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, alignItems: 'center'},
   dataLabel: {fontSize: 13, fontWeight: '600'},
   dataValue: {fontSize: 13, fontWeight: '500'},
 
-  btn: {flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: RADIUS.md, marginBottom: 8},
+  footerContainer: {
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: Platform.OS === 'ios' ? 10 : SPACING.lg,
+    paddingTop: 10,
+  },
+  btn: {flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: RADIUS.md},
   btnText: {fontSize: 14, fontWeight: '800', letterSpacing: 2},
 
   // modal

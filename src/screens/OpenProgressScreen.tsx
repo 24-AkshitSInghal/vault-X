@@ -238,7 +238,7 @@ const s = StyleSheet.create({
   statusTitle: {marginTop: 25, fontSize: 18, fontWeight: '800', letterSpacing: 0.5},
   subLabel: {marginTop: 6, fontSize: 12, fontWeight: '500'},
   stepsList: {width: '100%'},
-  successBox: {alignItems: 'center', justifyContent: 'center'},
+  successBox: {flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 60},
   successText: {fontSize: 24, fontWeight: '900', letterSpacing: 2, marginTop: 20},
   successSub: {fontSize: 14, fontWeight: '600', marginTop: 8},
 });

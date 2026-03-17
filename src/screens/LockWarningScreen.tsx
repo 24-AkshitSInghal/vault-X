@@ -81,19 +81,18 @@ const LockWarningScreen: React.FC<Props> = ({isDark, flow, onConfirm, onReset, o
 
         {/* Buttons */}
         <TouchableOpacity
-          style={[s.btn, {backgroundColor: C.btnBg}]}
+          style={[s.btn, {backgroundColor: '#EF4444'}]}
           onPress={onConfirm}
           activeOpacity={0.85}>
-          <MaterialIcon name="check-bold" size={18} color={C.btnText} style={{marginRight: 10}} />
-          <Text style={[s.btnText, {color: C.btnText}]}>CONFIRMED</Text>
+          <MaterialIcon name="check-bold" size={18} color="#FFF" style={{marginRight: 10}} />
+          <Text style={[s.btnText, {color: '#FFF'}]}>CONFIRMED</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[s.btn, s.btnOutline, {borderColor: C.border, backgroundColor: C.surface}]}
+          style={[s.btn, s.btnOutline, {borderColor: C.border, backgroundColor: 'transparent'}]}
           onPress={onReset}
           activeOpacity={0.85}>
-          <MaterialIcon name="refresh" size={18} color={C.text} style={{marginRight: 10}} />
-          <Text style={[s.btnText, {color: C.text}]}>RESET</Text>
+          <Text style={[s.btnText, {color: C.muted}]}>CANCEL</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -114,7 +113,9 @@ const s = StyleSheet.create({
   dotWrap: {alignItems: 'center', marginBottom: SPACING.xxl},
 
   warningCard: {
-    backgroundColor: '#F5F5F0',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)', // #EF4444 at 10%
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderWidth: 1,
     borderRadius: RADIUS.lg,
     padding: SPACING.lg + 4,
     marginBottom: SPACING.xl,
