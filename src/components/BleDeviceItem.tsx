@@ -19,6 +19,7 @@ export const BleDeviceItem: React.FC<BleDeviceItemProps> = ({
   isConnecting,
   connectedDeviceId,
 }) => {
+
   const C = getTheme(isDark);
   const name = device.name || 'Unknown Device';
   const isThisDeviceConnecting = isConnecting && connectedDeviceId === device.id;

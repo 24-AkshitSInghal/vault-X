@@ -85,18 +85,18 @@ const BleDeviceScanScreen: React.FC<Props> = ({
     setDevices([]);
     setIsScanning(true);
     setStatusText('Scanning for nearby devices...');
-    
-    const TARGET_SERVICE_UUID = 'f000fff0-0451-4000-b000-000000000000';
 
-    bleService.manager.startDeviceScan([TARGET_SERVICE_UUID], null, (error, scannedDevice) => {
+    // const TARGET_SERVICE_UUID = 'f000fff0-0451-4000-b000-000000000000';
+
+    bleService.manager.startDeviceScan([], null, (error, scannedDevice) => {
       if (error) {
         console.warn('BLE Scan Error', error);
         setIsScanning(false);
         const errString = error.message?.toLowerCase() || '';
         if (errString.includes('unsupported')) {
-            setStatusText('BLE is not supported on this Simulator/Device.');
+          setStatusText('BLE is not supported on this Simulator/Device.');
         } else {
-            setStatusText('Scan failed or stopped.');
+          setStatusText('Scan failed or stopped.');
         }
         return;
       }
@@ -125,12 +125,12 @@ const BleDeviceScanScreen: React.FC<Props> = ({
       setIsScanning(false);
       bleService.manager.stopDeviceScan();
       setStatusText(`Connecting to ${device.name || 'Unknown Device'}...`);
-      
+
       const connectedDevice = await device.connect();
       await connectedDevice.discoverAllServicesAndCharacteristics();
-      
+
       bleService.connectedDevice = connectedDevice;
-      
+
       setStatusText('Connected Successfully!');
       setTimeout(() => {
         onDeviceConnected();
@@ -157,7 +157,7 @@ const BleDeviceScanScreen: React.FC<Props> = ({
       <View style={s.container}>
         <View style={s.headerContainer}>
           <Animated.View style={[s.iconWrapper, { backgroundColor: C.surface, borderColor: C.border, transform: [{ scale: pulseAnim }] }]}>
-             <MaterialIcon name="bluetooth" size={28} color={isScanning ? C.text : C.muted} />
+            <MaterialIcon name="bluetooth" size={28} color={isScanning ? C.text : C.muted} />
           </Animated.View>
           <Text style={[s.title, { color: C.text }]}>SELECT BLE DEVICE</Text>
           <Text style={[s.subtitle, { color: connectingId ? C.warning : C.muted }]}>{statusText}</Text>
@@ -227,14 +227,14 @@ const BleDeviceScanScreen: React.FC<Props> = ({
         )}
 
         {/* ── DEV SKIP BUTTON (development only) ── */}
-        {__DEV__ && !connectingId && (
+        {/* {__DEV__ && !connectingId && (
           <TouchableOpacity
             style={{ marginTop: 15, padding: 15, backgroundColor: 'rgba(255,0,0,0.1)', borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'red', alignItems: 'center' }}
             onPress={() => onDeviceConnected()}
           >
             <Text style={{ color: 'red', fontWeight: 'bold', textAlign: 'center', letterSpacing: 1 }}>SKIP BLE (DEV)</Text>
           </TouchableOpacity>
-        )}
+        )} */}
 
       </View>
     </SafeAreaView>

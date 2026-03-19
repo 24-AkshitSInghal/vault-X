@@ -31,12 +31,9 @@ function App(): React.JSX.Element {
 
   useEffect(() => {
     const initSession = async () => {
-      const session = await getSession();
-      if (session) {
-        setUserId(session.userId);
-        setFlow(session.flow);
-        setScreen('bleScan');
-      }
+      // For security, always clear session on app startup
+      // so the user must login again if the app was killed.
+      await clearSession();
       setIsCheckingSession(false);
     };
     initSession();

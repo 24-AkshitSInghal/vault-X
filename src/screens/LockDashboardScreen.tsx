@@ -92,7 +92,6 @@ const LockDashboardScreen: React.FC<Props> = ({ isDark, flow, onToggleTheme, onL
     setTimeout(() => setShowWarning2(true), 300);
   };
 
-  // Slide on Warning 2 → call onProceed
   const confirmProceed = async () => {
     setShowWarning2(false);
     if (!selection) { return; }
@@ -102,13 +101,12 @@ const LockDashboardScreen: React.FC<Props> = ({ isDark, flow, onToggleTheme, onL
 
     if (sent) {
       showToast('Command Sent');
+      setTimeout(() => {
+        onProceed(selection);
+      }, 1000);
     } else {
-      showToast('Device Not Connected');
+      showToast('Device Not Connected / Failed to Send');
     }
-
-    setTimeout(() => {
-      onProceed(selection);
-    }, 1000);
   };
 
   return (

@@ -47,13 +47,12 @@ const OpenWarningScreen: React.FC<Props> = ({isDark, onYes, onNo, onLogout, onTo
     
     if (sent) {
       showToast('Command Sent');
+      setTimeout(() => {
+        onYes();
+      }, 1000);
     } else {
-      showToast('Device Not Connected');
+      showToast('Device Not Connected / Failed to Send');
     }
-
-    setTimeout(() => {
-      onYes();
-    }, 1000);
   };
 
   return (
