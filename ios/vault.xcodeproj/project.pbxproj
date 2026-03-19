@@ -271,18 +271,20 @@
 				DEVELOPMENT_TEAM = 23JY3FMUD4;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = vault/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = vaultx;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 3.2;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.vaultx.cargo;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.cargo-lock.vaultx";
 				PRODUCT_NAME = vault;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -304,18 +306,20 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 23JY3FMUD4;
 				INFOPLIST_FILE = vault/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = vaultx;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 3.2;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.vaultx.cargo;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.cargo-lock.vaultx";
 				PRODUCT_NAME = vault;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;

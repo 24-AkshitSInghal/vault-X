@@ -19,7 +19,7 @@ import { FlowType } from '../constants/credentials';
 import { getTheme, RADIUS, SPACING } from '../constants/colors';
 import { GlobalHeader } from '../components/GlobalHeader';
 import { validateOTP } from '../utils/otpValidator';
-import userSecrets from '../data/userSecrets.json';
+import { getUserSecret } from '../utils/userSecrets';
 import Geolocation from 'react-native-geolocation-service';
 
 // ── Per-flow content config ───────────────────────────────────────────────────
@@ -113,8 +113,7 @@ const OtpLoginScreen: React.FC<Props> = ({ isDark, onToggleTheme, onLoginSuccess
       showError('Please enter your Username before proceeding.');
       return;
     }
-    const secretsMap = userSecrets as Record<string, string>;
-    const userSecret = secretsMap[uniqueId.trim()];
+    const userSecret = getUserSecret(uniqueId.trim());
 
     if (!userSecret) {
       showError('User not found. Please verify your username.', 'denied');
@@ -134,8 +133,7 @@ const OtpLoginScreen: React.FC<Props> = ({ isDark, onToggleTheme, onLoginSuccess
       return;
     }
 
-    const secretsMap = userSecrets as Record<string, string>;
-    const userSecret = secretsMap[uniqueId.trim()];
+    const userSecret = getUserSecret(uniqueId.trim());
 
     if (!userSecret) {
       showError('User not found.', 'denied');

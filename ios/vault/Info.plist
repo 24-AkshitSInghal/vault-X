@@ -37,10 +37,14 @@
 	<string>This app requires Bluetooth to connect to vault devices.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>This app requires Bluetooth to connect to vault devices.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app requires access to your location to accurately record container handling locations.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app requires access to the camera to take verification photos of your closed container.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app requires access to your location to accurately record container handling locations.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+<string>This app requires location access to continuously detect and communicate with nearby vault devices.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+<string>This app needs access to your photo library to upload locked or unlocked container images.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIAppFonts</key>
