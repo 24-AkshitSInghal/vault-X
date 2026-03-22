@@ -9,6 +9,7 @@ import {
   Animated,
   ActivityIndicator,
   TextInput,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
@@ -173,15 +174,22 @@ const BleDeviceScanScreen: React.FC<Props> = ({
             onChangeText={setSearchQuery}
             autoCapitalize="none"
             autoCorrect={false}
+            returnKeyType="search"
+            onSubmitEditing={() => Keyboard.dismiss()}
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')} style={s.clearBtn}>
+            <TouchableOpacity onPress={() => {
+              setSearchQuery('');
+              Keyboard.dismiss();
+            }} style={s.clearBtn}>
               <MaterialIcon name="close" size={18} color={C.muted} />
             </TouchableOpacity>
           )}
         </View>
 
         <FlatList
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           data={devices.filter((device) => {
             const term = searchQuery.toLowerCase();
             const name = (device.name || 'Unknown Device').toLowerCase();
@@ -227,14 +235,14 @@ const BleDeviceScanScreen: React.FC<Props> = ({
         )}
 
         {/* ── DEV SKIP BUTTON (development only) ── */}
-        {/* {__DEV__ && !connectingId && (
+        {__DEV__ && !connectingId && (
           <TouchableOpacity
             style={{ marginTop: 15, padding: 15, backgroundColor: 'rgba(255,0,0,0.1)', borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'red', alignItems: 'center' }}
             onPress={() => onDeviceConnected()}
           >
             <Text style={{ color: 'red', fontWeight: 'bold', textAlign: 'center', letterSpacing: 1 }}>SKIP BLE (DEV)</Text>
           </TouchableOpacity>
-        )} */}
+        )}
 
       </View>
     </SafeAreaView>

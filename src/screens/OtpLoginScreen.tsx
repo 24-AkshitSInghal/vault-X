@@ -309,14 +309,14 @@ const OtpLoginScreen: React.FC<Props> = ({ isDark, onToggleTheme, onLoginSuccess
             )}
 
             {/* ── DEV SKIP BUTTON (development only) ── */}
-            {/* {__DEV__ && (
+            {__DEV__ && (
               <TouchableOpacity
                 style={{ marginTop: 20, padding: 15, backgroundColor: 'rgba(255,0,0,0.1)', borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'red', alignItems: 'center', width: '100%' }}
                 onPress={() => onLoginSuccess(activeTab, 'dev-admin')}
               >
                 <Text style={{ color: 'red', fontWeight: 'bold', textAlign: 'center', letterSpacing: 1 }}>SKIP LOGIN (DEV)</Text>
               </TouchableOpacity>
-            )} */}
+            )}
 
           </Animated.View>
         </View>
