@@ -38,7 +38,13 @@ const DEVICE = {
 };
 
 // ── Battery Bar ────────────────────────────────────────────────────────────────
-const BatteryBar = ({ level, C }: { level: number; C: ReturnType<typeof getTheme> }) => (
+const BatteryBar = ({
+  level,
+  C,
+}: {
+  level: number;
+  C: ReturnType<typeof getTheme>;
+}) => (
   <View style={[bbSt.track, { backgroundColor: C.border }]}>
     <View
       style={[
@@ -56,10 +62,14 @@ const bbSt = StyleSheet.create({
   fill: { height: '100%', borderRadius: 3 },
 });
 
-
-
 // ── Main ───────────────────────────────────────────────────────────────────────
-const LockDashboardScreen: React.FC<Props> = ({ isDark, flow, onToggleTheme, onLogout, onProceed }) => {
+const LockDashboardScreen: React.FC<Props> = ({
+  isDark,
+  flow,
+  onToggleTheme,
+  onLogout,
+  onProceed,
+}) => {
   const C = getTheme(isDark);
 
   const [selection, setSelection] = useState<SelectionType>(null);
@@ -67,6 +77,7 @@ const LockDashboardScreen: React.FC<Props> = ({ isDark, flow, onToggleTheme, onL
   const [showWarning1, setShowWarning1] = useState(false);
   const [showWarning2, setShowWarning2] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
+  const [devMode, setDevMode] = useState(false);
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const toastAnim = useRef(new Animated.Value(0)).current;
@@ -75,9 +86,17 @@ const LockDashboardScreen: React.FC<Props> = ({ isDark, flow, onToggleTheme, onL
     setToastMsg(msg);
     toastAnim.setValue(0);
     Animated.sequence([
-      Animated.timing(toastAnim, { toValue: 1, duration: 250, useNativeDriver: true }),
+      Animated.timing(toastAnim, {
+        toValue: 1,
+        duration: 250,
+        useNativeDriver: true,
+      }),
       Animated.delay(1200),
-      Animated.timing(toastAnim, { toValue: 0, duration: 250, useNativeDriver: true }),
+      Animated.timing(toastAnim, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
     ]).start(() => setToastMsg(null));
   };
 
@@ -94,7 +113,14 @@ const LockDashboardScreen: React.FC<Props> = ({ isDark, flow, onToggleTheme, onL
 
   const confirmProceed = async () => {
     setShowWarning2(false);
-    if (!selection) { return; }
+    if (!selection) {
+      return;
+    }
+
+    if (devMode) {
+      onProceed(selection);
+      return;
+    }
 
     const hexCommand = selection === 'container' ? '0x57004100' : '0x57004200';
     const sent = await bleService.sendCommand(hexCommand);
@@ -110,8 +136,14 @@ const LockDashboardScreen: React.FC<Props> = ({ isDark, flow, onToggleTheme, onL
   };
 
   return (
-    <SafeAreaView style={[s.safeArea, { backgroundColor: C.bg }]} edges={['top', 'bottom']}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={C.bg} />
+    <SafeAreaView
+      style={[s.safeArea, { backgroundColor: C.bg }]}
+      edges={['top', 'bottom']}
+    >
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={C.bg}
+      />
 
       <GlobalHeader
         isDark={isDark}
@@ -119,12 +151,37 @@ const LockDashboardScreen: React.FC<Props> = ({ isDark, flow, onToggleTheme, onL
         onLogout={onLogout}
       />
 
+      {__DEV__ && (
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => setDevMode(!devMode)}
+          style={{
+            alignSelf: 'center',
+            marginTop: 10,
+            paddingVertical: 6,
+            paddingHorizontal: 12,
+            backgroundColor: devMode ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: devMode ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)',
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 11,
+              fontWeight: '900',
+              color: devMode ? '#10B981' : '#EF4444',
+            }}
+          >
+            DEV BYPASS: {devMode ? 'ACTIVE' : 'OFF'}
+          </Text>
+        </TouchableOpacity>
+      )}
+
       {/* ── Body ── */}
       <View style={s.body}>
-
         {/* ── Action Buttons ── */}
         <View style={s.actions}>
-
           {/* CONTAINER */}
           <TouchableOpacity
             activeOpacity={0.85}
@@ -133,14 +190,18 @@ const LockDashboardScreen: React.FC<Props> = ({ isDark, flow, onToggleTheme, onL
               { backgroundColor: C.surface, borderColor: C.border },
               selection === 'container' && { borderColor: C.text },
             ]}
-            onPress={() => handleSelect('container')}>
-            <MaterialIcon
-              name="package-variant-closed"
-              size={20}
-              color={selection === 'container' ? C.text : C.muted}
-              style={s.actionIcon}
+            onPress={() => handleSelect('container')}
+          >
+            <Image
+              source={require('../../assets/icons/container.png')}
+              style={[s.actionIcon, { width: 30, height: 30, tintColor: selection === 'container' ? C.text : C.muted, resizeMode: 'contain' }]}
             />
-            <Text style={[s.actionText, { color: selection === 'container' ? C.text : C.muted }]}>
+            <Text
+              style={[
+                s.actionText,
+                { color: selection === 'container' ? C.text : C.muted },
+              ]}
+            >
               CONTAINER
             </Text>
           </TouchableOpacity>
@@ -153,30 +214,46 @@ const LockDashboardScreen: React.FC<Props> = ({ isDark, flow, onToggleTheme, onL
               { backgroundColor: C.surface, borderColor: C.border },
               selection === 'trailer' && { borderColor: C.text },
             ]}
-            onPress={() => handleSelect('trailer')}>
+            onPress={() => handleSelect('trailer')}
+          >
             <MaterialIcon
               name="truck-outline"
-              size={20}
+              size={25}
               color={selection === 'trailer' ? C.text : C.muted}
               style={s.actionIcon}
             />
-            <Text style={[s.actionText, { color: selection === 'trailer' ? C.text : C.muted }]}>
+            <Text
+              style={[
+                s.actionText,
+                { color: selection === 'trailer' ? C.text : C.muted },
+              ]}
+            >
               TRAILER
             </Text>
           </TouchableOpacity>
-
         </View>
 
         {/* ── Device Status Card ── */}
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => setShowBatteryWarning(true)}
-          style={[s.statusCard, { backgroundColor: C.surface, borderColor: C.border }]}>
+          style={[
+            s.statusCard,
+            { backgroundColor: C.surface, borderColor: C.border },
+          ]}
+        >
           <View style={s.statusRow}>
-            <MaterialIcon name="battery-high" size={15} color={C.muted} style={{ marginRight: 6 }} />
+            <MaterialIcon
+              name="battery-high"
+              size={15}
+              color={C.muted}
+              style={{ marginRight: 6 }}
+            />
             <Text style={[s.statusLabel, { color: C.text }]}>
               BATTERY LEVEL:{' '}
-              <Text style={{ color: DEVICE.batteryLevel > 20 ? C.text : C.danger }}>
+              <Text
+                style={{ color: DEVICE.batteryLevel > 20 ? C.text : C.danger }}
+              >
                 {DEVICE.batteryLevel}%
               </Text>
             </Text>
@@ -186,26 +263,46 @@ const LockDashboardScreen: React.FC<Props> = ({ isDark, flow, onToggleTheme, onL
           <View style={[s.divider, { backgroundColor: C.border }]} />
 
           <View style={s.statusRow}>
-            <MaterialIcon name="wrench-outline" size={15} color={C.muted} style={{ marginRight: 6 }} />
+            <MaterialIcon
+              name="wrench-outline"
+              size={15}
+              color={C.muted}
+              style={{ marginRight: 6 }}
+            />
             <Text style={[s.statusLabel, { color: C.text }]}>
               Lock SN:{' '}
-              <Text style={{ color: C.subText, fontSize: 10 }}>{bleService.connectedDevice?.id || 'Unknown'}</Text>
+              <Text style={{ color: C.subText, fontSize: 10 }}>
+                {bleService.connectedDevice?.id || 'Unknown'}
+              </Text>
             </Text>
           </View>
 
           <View style={[s.statusRow, { marginTop: SPACING.sm }]}>
-            <View style={[s.connDot, { backgroundColor: DEVICE.connected ? C.success : C.danger }]} />
-            <Text style={[s.connText, { color: DEVICE.connected ? C.success : C.danger }]}>
+            <View
+              style={[
+                s.connDot,
+                { backgroundColor: DEVICE.connected ? C.success : C.danger },
+              ]}
+            />
+            <Text
+              style={[
+                s.connText,
+                { color: DEVICE.connected ? C.success : C.danger },
+              ]}
+            >
               {DEVICE.connected ? 'CONNECTED' : 'DISCONNECTED'}
             </Text>
           </View>
         </TouchableOpacity>
 
-
-
         {/* ── Floating Notification Toast ── */}
         {toastMsg && (
-          <Animated.View style={[s.toastCard, { opacity: toastAnim, backgroundColor: isDark ? '#111' : '#fff' }]}>
+          <Animated.View
+            style={[
+              s.toastCard,
+              { opacity: toastAnim, backgroundColor: isDark ? '#111' : '#fff' },
+            ]}
+          >
             <Text style={[s.toastText, { color: C.text }]}>{toastMsg}</Text>
           </Animated.View>
         )}
@@ -218,36 +315,49 @@ const LockDashboardScreen: React.FC<Props> = ({ isDark, flow, onToggleTheme, onL
         visible={showWarning1}
         transparent
         animationType="fade"
-        onRequestClose={() => setShowWarning1(false)}>
+        onRequestClose={() => setShowWarning1(false)}
+      >
         <View style={s.modalOverlay}>
-          <View style={[s.modalCard, { backgroundColor: C.surface, borderColor: C.border }]}>
-
+          <View
+            style={[
+              s.modalCard,
+              { backgroundColor: C.surface, borderColor: C.border },
+            ]}
+          >
             {/* Title bar */}
-            <View style={{
-              backgroundColor: C.surfaceHigh,
-              paddingVertical: 12,
-              paddingHorizontal: 16,
-              borderTopLeftRadius: RADIUS.lg,
-              borderTopRightRadius: RADIUS.lg,
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 8,
-            }}>
+            <View
+              style={{
+                backgroundColor: C.surfaceHigh,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                borderTopLeftRadius: RADIUS.lg,
+                borderTopRightRadius: RADIUS.lg,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
               {/* <MaterialIcon name="alert-octagon" size={18} color="#EF4444" /> */}
-              <Text style={[s.modalTitle, { color: '#EF4444' }]}>! WARNING !</Text>
+              <Text style={[s.modalTitle, { color: '#EF4444' }]}>
+                ! WARNING !
+              </Text>
               {/* <MaterialIcon name="alert-octagon" size={18} color="#EF4444" /> */}
             </View>
 
             <View style={{ padding: SPACING.lg, alignItems: 'center' }}>
-
               {/* Skull */}
               <View style={w1.skullBox}>
-                <MaterialIcon name="skull-crossbones" size={46} color="#EF4444" />
+                <MaterialIcon
+                  name="skull-crossbones"
+                  size={46}
+                  color="#EF4444"
+                />
               </View>
 
               {/* Main message */}
               <Text style={[w1.msgMain, { color: C.text }]}>
-                MAKE SURE DOORS ARE CLOSED{'\n'}AND LATCHED{'\n'}BEFORE CONTINUING TO LOCK!
+                MAKE SURE DOORS ARE CLOSED{'\n'}AND LATCHED{'\n'}BEFORE
+                CONTINUING TO LOCK!
               </Text>
 
               <View style={w1.divider} />
@@ -274,10 +384,19 @@ const LockDashboardScreen: React.FC<Props> = ({ isDark, flow, onToggleTheme, onL
               <TouchableOpacity
                 onPress={() => setShowWarning1(false)}
                 activeOpacity={0.7}
-                style={{ alignItems: 'center', paddingVertical: 12 }}>
-                <Text style={{ color: C.muted, fontSize: 13, fontWeight: '700', letterSpacing: 1 }}>CANCEL</Text>
+                style={{ alignItems: 'center', paddingVertical: 12 }}
+              >
+                <Text
+                  style={{
+                    color: C.muted,
+                    fontSize: 13,
+                    fontWeight: '700',
+                    letterSpacing: 1,
+                  }}
+                >
+                  CANCEL
+                </Text>
               </TouchableOpacity>
-
             </View>
           </View>
         </View>
@@ -290,26 +409,50 @@ const LockDashboardScreen: React.FC<Props> = ({ isDark, flow, onToggleTheme, onL
         visible={showWarning2}
         transparent
         animationType="fade"
-        onRequestClose={() => setShowWarning2(false)}>
+        onRequestClose={() => setShowWarning2(false)}
+      >
         <View style={s.modalOverlay}>
-          <View style={[s.modalCard, { backgroundColor: C.surface, borderColor: C.border }]}>
-
+          <View
+            style={[
+              s.modalCard,
+              { backgroundColor: C.surface, borderColor: C.border },
+            ]}
+          >
             {/* Title bar */}
-            <View style={{
-              backgroundColor: C.surfaceHigh,
-              paddingVertical: 12,
-              paddingHorizontal: 16,
-              borderTopLeftRadius: RADIUS.lg,
-              borderTopRightRadius: RADIUS.lg,
-            }}>
-              <Text style={[s.modalTitle, { color: C.text }]}>Confirm Selection</Text>
+            <View
+              style={{
+                backgroundColor: C.surfaceHigh,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                borderTopLeftRadius: RADIUS.lg,
+                borderTopRightRadius: RADIUS.lg,
+              }}
+            >
+              <Text style={[s.modalTitle, { color: C.text }]}>
+                Confirm Selection
+              </Text>
             </View>
 
             <View style={{ padding: SPACING.lg }}>
-              <Text style={{ color: C.danger, fontSize: 13, fontWeight: '800', letterSpacing: 1, marginBottom: 6 }}>
+              <Text
+                style={{
+                  color: C.danger,
+                  fontSize: 13,
+                  fontWeight: '800',
+                  letterSpacing: 1,
+                  marginBottom: 6,
+                }}
+              >
                 !WARNING!
               </Text>
-              <Text style={{ color: C.subText, fontSize: 13, lineHeight: 22, marginBottom: 24 }}>
+              <Text
+                style={{
+                  color: C.subText,
+                  fontSize: 13,
+                  lineHeight: 22,
+                  marginBottom: 24,
+                }}
+              >
                 {selection !== 'trailer'
                   ? 'Using CONTAINER for TRAILER will cause the doors not to lock properly, YOU may be held LIABLE'
                   : 'Using TRAILER for CONTAINER will cause the doors not to lock properly, YOU may be held LIABLE'}
@@ -329,11 +472,24 @@ const LockDashboardScreen: React.FC<Props> = ({ isDark, flow, onToggleTheme, onL
               <TouchableOpacity
                 onPress={() => setShowWarning2(false)}
                 activeOpacity={0.7}
-                style={{ alignItems: 'center', paddingVertical: 14, marginTop: 4 }}>
-                <Text style={{ color: C.muted, fontSize: 13, fontWeight: '700', letterSpacing: 1 }}>CANCEL</Text>
+                style={{
+                  alignItems: 'center',
+                  paddingVertical: 14,
+                  marginTop: 4,
+                }}
+              >
+                <Text
+                  style={{
+                    color: C.muted,
+                    fontSize: 13,
+                    fontWeight: '700',
+                    letterSpacing: 1,
+                  }}
+                >
+                  CANCEL
+                </Text>
               </TouchableOpacity>
             </View>
-
           </View>
         </View>
       </Modal>
@@ -343,22 +499,70 @@ const LockDashboardScreen: React.FC<Props> = ({ isDark, flow, onToggleTheme, onL
         visible={logoutModal}
         transparent
         animationType="fade"
-        onRequestClose={() => setLogoutModal(false)}>
+        onRequestClose={() => setLogoutModal(false)}
+      >
         <View style={s.modalOverlay}>
-          <View style={[s.modalCard, { backgroundColor: C.surface, borderColor: C.border }]}>
-            <View style={{ backgroundColor: C.surfaceHigh, paddingVertical: 12, paddingHorizontal: 16, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg }}>
+          <View
+            style={[
+              s.modalCard,
+              { backgroundColor: C.surface, borderColor: C.border },
+            ]}
+          >
+            <View
+              style={{
+                backgroundColor: C.surfaceHigh,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                borderTopLeftRadius: RADIUS.lg,
+                borderTopRightRadius: RADIUS.lg,
+              }}
+            >
               <Text style={[s.modalTitle, { color: C.text }]}>Sign Out</Text>
             </View>
             <View style={{ padding: SPACING.lg }}>
-              <Text style={{ color: C.subText, fontSize: 13, lineHeight: 22, marginTop: 4, marginBottom: 20 }}>
+              <Text
+                style={{
+                  color: C.subText,
+                  fontSize: 13,
+                  lineHeight: 22,
+                  marginTop: 4,
+                  marginBottom: 20,
+                }}
+              >
                 Are you sure you want to sign out?
               </Text>
               <View style={s.modalActions}>
-                <TouchableOpacity onPress={() => setLogoutModal(false)} activeOpacity={0.7} style={{ paddingVertical: 10, paddingHorizontal: 15 }}>
-                  <Text style={{ color: C.muted, fontSize: 13, fontWeight: '700', letterSpacing: 1 }}>CANCEL</Text>
+                <TouchableOpacity
+                  onPress={() => setLogoutModal(false)}
+                  activeOpacity={0.7}
+                  style={{ paddingVertical: 10, paddingHorizontal: 15 }}
+                >
+                  <Text
+                    style={{
+                      color: C.muted,
+                      fontSize: 13,
+                      fontWeight: '700',
+                      letterSpacing: 1,
+                    }}
+                  >
+                    CANCEL
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={onLogout} activeOpacity={0.7} style={{ paddingVertical: 10, paddingHorizontal: 15 }}>
-                  <Text style={{ color: C.danger, fontSize: 13, fontWeight: '800', letterSpacing: 1 }}>SIGN OUT</Text>
+                <TouchableOpacity
+                  onPress={onLogout}
+                  activeOpacity={0.7}
+                  style={{ paddingVertical: 10, paddingHorizontal: 15 }}
+                >
+                  <Text
+                    style={{
+                      color: C.danger,
+                      fontSize: 13,
+                      fontWeight: '800',
+                      letterSpacing: 1,
+                    }}
+                  >
+                    SIGN OUT
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -371,23 +575,49 @@ const LockDashboardScreen: React.FC<Props> = ({ isDark, flow, onToggleTheme, onL
         visible={showBatteryWarning}
         animationType="fade"
         transparent={false}
-        onRequestClose={() => setShowBatteryWarning(false)}>
-        <SafeAreaView style={[s.safeArea, { backgroundColor: C.bg }]} edges={['top', 'bottom']}>
-          <Pressable style={s.modalWarnWrap} onPress={() => setShowBatteryWarning(false)}>
+        onRequestClose={() => setShowBatteryWarning(false)}
+      >
+        <SafeAreaView
+          style={[s.safeArea, { backgroundColor: C.bg }]}
+          edges={['top', 'bottom']}
+        >
+          <Pressable
+            style={s.modalWarnWrap}
+            onPress={() => setShowBatteryWarning(false)}
+          >
             <View style={[s.warnLogoBox, { backgroundColor: C.surfaceHigh }]}>
               <Image
-                source={isDark ? require('../../assets/white-logo.png') : require('../../assets/black-logo.png')}
+                source={
+                  isDark
+                    ? require('../../assets/white-logo.png')
+                    : require('../../assets/black-logo.png')
+                }
                 style={{ width: 200, height: 150, resizeMode: 'contain' }}
               />
             </View>
             <View style={s.warnContentBox}>
               <View style={s.warningBadge}>
-                <MaterialIcon name="alert-outline" size={26} color="#FDE047" style={{ marginRight: 8 }} />
+                <MaterialIcon
+                  name="alert-outline"
+                  size={26}
+                  color="#FDE047"
+                  style={{ marginRight: 8 }}
+                />
                 <Text style={s.warnHeadline}>!WARNING!</Text>
-                <MaterialIcon name="alert-outline" size={26} color="#FDE047" style={{ marginLeft: 8 }} />
+                <MaterialIcon
+                  name="alert-outline"
+                  size={26}
+                  color="#FDE047"
+                  style={{ marginLeft: 8 }}
+                />
               </View>
               <Text style={s.warnTitle}>LOW BATTERY!</Text>
-              <View style={[s.warnDivider, { backgroundColor: 'rgba(239, 68, 68, 0.3)' }]} />
+              <View
+                style={[
+                  s.warnDivider,
+                  { backgroundColor: 'rgba(239, 68, 68, 0.3)' },
+                ]}
+              />
               <Text style={s.warnSubText}>PLEASE RECHARGE</Text>
               <View style={s.warnOrCircle}>
                 <Text style={s.warnOrText}>OR</Text>
@@ -397,7 +627,6 @@ const LockDashboardScreen: React.FC<Props> = ({ isDark, flow, onToggleTheme, onL
           </Pressable>
         </SafeAreaView>
       </Modal>
-
     </SafeAreaView>
   );
 };
@@ -415,14 +644,28 @@ const s = StyleSheet.create({
     paddingBottom: SPACING.md,
   },
   topBarLeft: { width: 80 },
-  topBarRight: { flexDirection: 'row', alignItems: 'center', width: 80, justifyContent: 'flex-end' },
+  topBarRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: 80,
+    justifyContent: 'flex-end',
+  },
   headerLogo: { alignItems: 'center' },
   iconBtn: {
-    width: 36, height: 36, borderRadius: 18,
-    alignItems: 'center', justifyContent: 'center', borderWidth: 1,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
   },
 
-  body: { flex: 1, paddingHorizontal: SPACING.lg, paddingBottom: SPACING.md, justifyContent: 'center' },
+  body: {
+    flex: 1,
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.md,
+    justifyContent: 'center',
+  },
 
   actions: { marginBottom: SPACING.lg, gap: SPACING.sm },
   actionBtn: {
@@ -469,7 +712,12 @@ const s = StyleSheet.create({
   },
   toastText: { fontSize: 13, fontWeight: '700', letterSpacing: 1 },
 
-  modalWarnWrap: { flex: 1, alignItems: 'center', paddingHorizontal: SPACING.xl, paddingTop: 80 },
+  modalWarnWrap: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: SPACING.xl,
+    paddingTop: 80,
+  },
   warnLogoBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -516,14 +764,29 @@ const s = StyleSheet.create({
     marginBottom: SPACING.xl,
     textAlign: 'center',
   },
-  warnSubText: { color: '#EF4444', fontSize: 20, fontWeight: '800', letterSpacing: 1.5, textAlign: 'center' },
-  warnDivider: { width: 60, height: 4, borderRadius: 2, marginBottom: SPACING.xl },
+  warnSubText: {
+    color: '#EF4444',
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    textAlign: 'center',
+  },
+  warnDivider: {
+    width: 60,
+    height: 4,
+    borderRadius: 2,
+    marginBottom: SPACING.xl,
+  },
   warnOrCircle: {
-    width: 46, height: 46, borderRadius: 23,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginVertical: SPACING.xl,
-    borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.2)',
   },
   warnOrText: { color: '#EF4444', fontSize: 16, fontWeight: '800' },
 
@@ -546,7 +809,11 @@ const s = StyleSheet.create({
     shadowRadius: 5,
   },
   modalTitle: { fontSize: 15, fontWeight: '700', letterSpacing: 0.5 },
-  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: SPACING.sm },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: SPACING.sm,
+  },
 });
 
 // ── Warning 1 Card Content Styles ─────────────────────────────────────────────

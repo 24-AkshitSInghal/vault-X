@@ -37,7 +37,7 @@ export const validateOTP = (token: string, secret: string): boolean => {
     const decodedSecret = new base32.Decoder({ type: 'rfc4648' })
       .write(secret.toUpperCase().replace(/=/g, ''))
       .finalize();
-      
+
     const secretHex = bytesToHex(decodedSecret);
     const secretWords = CryptoJS.enc.Hex.parse(secretHex);
 
@@ -63,8 +63,10 @@ export const validateOTP = (token: string, secret: string): boolean => {
         ((hmacBytes[offset + 2] & 0xff) << 8) |
         (hmacBytes[offset + 3] & 0xff);
 
-      const otp = (binary % Math.pow(10, digits)).toString().padStart(digits, '0');
-      
+      const otp = (binary % Math.pow(10, digits))
+        .toString()
+        .padStart(digits, '0');
+
       if (otp === token) {
         return true;
       }

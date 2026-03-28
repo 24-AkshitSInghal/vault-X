@@ -19,10 +19,10 @@ export const BleDeviceItem: React.FC<BleDeviceItemProps> = ({
   isConnecting,
   connectedDeviceId,
 }) => {
-
   const C = getTheme(isDark);
   const name = device.name || 'Unknown Device';
-  const isThisDeviceConnecting = isConnecting && connectedDeviceId === device.id;
+  const isThisDeviceConnecting =
+    isConnecting && connectedDeviceId === device.id;
 
   return (
     <TouchableOpacity
@@ -35,14 +35,31 @@ export const BleDeviceItem: React.FC<BleDeviceItemProps> = ({
       disabled={isConnecting}
     >
       <View style={styles.infoWrapper}>
-        <MaterialIcon name="bluetooth" size={24} color={C.text} style={styles.icon} />
+        <MaterialIcon
+          name="bluetooth"
+          size={24}
+          color={C.text}
+          style={styles.icon}
+        />
         <View style={styles.textWrapper}>
           <Text style={[styles.nameText, { color: C.text }]}>{name}</Text>
-          <Text style={[styles.idText, { color: C.muted }]}>MAC ID: {device.id}</Text>
+          <Text style={[styles.idText, { color: C.muted }]}>
+            MAC ID: {device.id}
+          </Text>
         </View>
       </View>
-      <View style={[styles.connectBadge, { backgroundColor: isThisDeviceConnecting ? C.warning : C.btnBg }]}>
-        <Text style={[styles.connectText, { color: isThisDeviceConnecting ? '#000' : C.btnText }]}>
+      <View
+        style={[
+          styles.connectBadge,
+          { backgroundColor: isThisDeviceConnecting ? C.warning : C.btnBg },
+        ]}
+      >
+        <Text
+          style={[
+            styles.connectText,
+            { color: isThisDeviceConnecting ? '#000' : C.btnText },
+          ]}
+        >
           {isThisDeviceConnecting ? 'CONNECTING...' : 'CONNECT'}
         </Text>
       </View>

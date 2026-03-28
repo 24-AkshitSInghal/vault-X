@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   StyleSheet,
   StatusBar,
   Image,
-  Modal,
   Platform,
   PermissionsAndroid,
 } from 'react-native';
@@ -16,38 +15,33 @@ import { getTheme, RADIUS, SPACING } from '../constants/colors';
 import { GlobalHeader } from '../components/GlobalHeader';
 import Geolocation from 'react-native-geolocation-service';
 import bleService from '../services/bleService';
+import { launchCamera } from 'react-native-image-picker';
 
 interface Props {
   isDark: boolean;
-  flow: 'lock' | 'open';
   containerNum: string;
   sealNum: string;
   userId: string;
-  capturedImage?: string | null;
   onLogout: () => void;
-  onNext?: () => void;
   onToggleTheme: () => void;
 }
 
-const FinalScreen: React.FC<Props> = ({
+const CargoPhotoScreen: React.FC<Props> = ({
   isDark,
-  flow,
   containerNum,
   sealNum,
   userId,
-  capturedImage,
   onLogout,
-  onNext,
   onToggleTheme,
 }) => {
   const C = getTheme(isDark);
   const [currentDate, setCurrentDate] = useState('');
   const [currentTime, setCurrentTime] = useState('');
   const [gpsLocation, setGpsLocation] = useState('Fetching...');
+  const [cargoImage, setCargoImage] = useState<string | null>(null);
 
   useEffect(() => {
     const now = new Date();
-    // Format Date: Mar 08, 2026
     const dateStr = now.toLocaleDateString('en-US', {
       month: 'short',
       day: '2-digit',
@@ -55,7 +49,6 @@ const FinalScreen: React.FC<Props> = ({
     });
     setCurrentDate(dateStr);
 
-    // Format Time: 01:36:24 PM
     const timeStr = now.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
@@ -67,11 +60,8 @@ const FinalScreen: React.FC<Props> = ({
     const requestLocationPermission = async () => {
       if (Platform.OS === 'ios') {
         const auth = await Geolocation.requestAuthorization('whenInUse');
-        if (auth === 'granted') {
-          getLocation();
-        } else {
-          setGpsLocation('Permission Denied');
-        }
+        if (auth === 'granted') getLocation();
+        else setGpsLocation('Permission Denied');
       } else if (Platform.OS === 'android') {
         const result = await PermissionsAndroid.requestMultiple([
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -99,32 +89,17 @@ const FinalScreen: React.FC<Props> = ({
         },
         error => {
           console.warn('Geolocation Error (High Accuracy Failed):', error.code, error.message);
-          // Fallback 1: Coarse location
+          // Fallback
           Geolocation.getCurrentPosition(
             p => {
               const { latitude, longitude } = p.coords;
               const latDir = latitude >= 0 ? 'N' : 'S';
               const lonDir = longitude >= 0 ? 'E' : 'W';
-              setGpsLocation(
-                `${Math.abs(latitude).toFixed(5)}°${latDir}, ${Math.abs(
-                  longitude,
-                ).toFixed(5)}°${lonDir} (Approx)`,
-              );
+              setGpsLocation(`${Math.abs(latitude).toFixed(5)}°${latDir}, ${Math.abs(longitude).toFixed(5)}°${lonDir} (Approx)`);
             },
             e => {
-              console.warn('Geolocation Error (Coarse Failed):', e.code, e.message);
-              // Fallback 2: Force native location manager (bypass Play Services)
-              Geolocation.getCurrentPosition(
-                p2 => {
-                  const { latitude, longitude } = p2.coords;
-                  setGpsLocation(`${Math.abs(latitude).toFixed(5)}°, ${Math.abs(longitude).toFixed(5)}° (Native)`);
-                },
-                e2 => {
-                  console.warn('Geolocation Error (Native Failed):', e2.code, e2.message);
-                  setGpsLocation('Location Unavailable');
-                },
-                { enableHighAccuracy: false, timeout: 15000, forceLocationManager: true }
-              );
+              console.warn('Geolocation Error (Fallback Failed):', e.code, e.message);
+              setGpsLocation('Location Unavailable');
             },
             { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
           );
@@ -135,6 +110,28 @@ const FinalScreen: React.FC<Props> = ({
 
     requestLocationPermission();
   }, []);
+
+  const handleCameraLaunch = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+      );
+      if (granted !== PermissionsAndroid.RESULTS.GRANTED) return;
+    }
+
+    launchCamera(
+      {
+        mediaType: 'photo',
+        cameraType: 'back',
+        quality: 0.8,
+      },
+      response => {
+        if (response.assets && response.assets.length > 0) {
+          setCargoImage(response.assets[0].uri || null);
+        }
+      },
+    );
+  };
 
   return (
     <SafeAreaView
@@ -153,25 +150,45 @@ const FinalScreen: React.FC<Props> = ({
       />
 
       <View style={s.content}>
-        {/* Verification Image Box */}
-        <View
+        {/* Cargo Image Box */}
+        <TouchableOpacity
           style={[
             s.cameraBox,
-            { backgroundColor: C.surfaceHigh, borderColor: C.border },
+            {
+              backgroundColor: C.surfaceHigh,
+              borderColor: C.border,
+              overflow: 'hidden',
+            },
           ]}
+          activeOpacity={0.8}
+          onPress={handleCameraLaunch}
         >
-          <Image
-            source={
-              capturedImage
-                ? { uri: capturedImage }
-                : require('../../assets/demophoto.jpeg')
-            }
-            style={s.cameraImage}
-            resizeMode="cover"
-          />
-          {/* Overlay gradient to match mockup look */}
-          <View style={s.cameraOverlay} />
-        </View>
+          {cargoImage ? (
+            <Image
+              source={{ uri: cargoImage }}
+              style={s.cameraImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                flex: 1,
+              }}
+            >
+              <MaterialIcon
+                name="camera"
+                size={40}
+                color={C.muted}
+                style={{ marginBottom: 8 }}
+              />
+              <Text style={{ color: C.muted, fontSize: 13, fontWeight: '700' }}>
+                Click to Take Cargo Picture
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
 
         {/* Data Card */}
         <View
@@ -196,10 +213,7 @@ const FinalScreen: React.FC<Props> = ({
             </Text>
             <View
               style={{
-                backgroundColor:
-                  flow === 'lock'
-                    ? 'rgba(16,185,129,0.15)'
-                    : 'rgba(245,158,11,0.15)',
+                backgroundColor: 'rgba(245,158,11,0.15)',
                 paddingHorizontal: 10,
                 paddingVertical: 4,
                 borderRadius: 8,
@@ -208,14 +222,10 @@ const FinalScreen: React.FC<Props> = ({
               <Text
                 style={[
                   s.dataValue,
-                  {
-                    color: flow === 'lock' ? '#10B981' : '#F59E0B',
-                    fontWeight: '900',
-                    letterSpacing: 1,
-                  },
+                  { color: '#F59E0B', fontWeight: '900', letterSpacing: 1 },
                 ]}
               >
-                {flow === 'lock' ? 'LOCKED' : 'UNLOCKED'}
+                CARGO PHOTO
               </Text>
             </View>
           </View>
@@ -224,27 +234,18 @@ const FinalScreen: React.FC<Props> = ({
             <Text style={[s.dataLabel, { color: C.subText }]}>Login ID:</Text>
             <Text style={[s.dataValue, { color: C.text }]}>{userId}</Text>
           </View>
-
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, { color: C.subText }]}>Date:</Text>
             <Text style={[s.dataValue, { color: C.text }]}>{currentDate}</Text>
           </View>
-
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, { color: C.subText }]}>Time:</Text>
             <Text style={[s.dataValue, { color: C.text }]}>{currentTime}</Text>
           </View>
-
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, { color: C.subText }]}>GPS:</Text>
             <Text style={[s.dataValue, { color: C.text }]}>{gpsLocation}</Text>
           </View>
-
-          <View style={s.dataRow}>
-            <Text style={[s.dataLabel, { color: C.subText }]}>Battery:</Text>
-            <Text style={[s.dataValue, { color: C.text }]}>97%</Text>
-          </View>
-
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, { color: C.subText }]}>
               Container #:
@@ -253,12 +254,10 @@ const FinalScreen: React.FC<Props> = ({
               {containerNum || 'TCLU9693193'}
             </Text>
           </View>
-
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, { color: C.subText }]}>Seal #:</Text>
             <Text style={[s.dataValue, { color: C.text }]}>{sealNum}</Text>
           </View>
-
           <View style={s.dataRow}>
             <Text style={[s.dataLabel, { color: C.subText }]}>Lock SN:</Text>
             <Text
@@ -274,33 +273,25 @@ const FinalScreen: React.FC<Props> = ({
           </View>
         </View>
 
-        {/* Disclaimer Warning */}
         <View style={s.disclaimerWrapper}>
           <Text style={[s.disclaimer, { color: C.text }]}>
-            PLEASE TAKE A SCREENSHOT OF THIS PAGE AND SEND TO YOUR SUPERVISOR
-            BEFORE {flow === 'open' ? 'PROCEEDING' : 'LOGGING OUT'}
+            PLEASE TAKE A SCREENSHOT OF THE CARGO PHOTO BEFORE LOGGING OUT
           </Text>
         </View>
       </View>
 
       <View style={s.footer}>
-        {flow === 'open' ? (
-          <TouchableOpacity
-            style={[s.logoutBtn, { backgroundColor: C.success }]}
-            onPress={onNext}
-            activeOpacity={0.85}
-          >
-            <Text style={[s.logoutBtnText, { color: '#FFF' }]}>NEXT</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={[s.logoutBtn, { backgroundColor: C.btnBg }]}
-            onPress={onLogout}
-            activeOpacity={0.85}
-          >
-            <Text style={[s.logoutBtnText, { color: C.btnText }]}>LOGOUT</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={[
+            s.logoutBtn,
+            { backgroundColor: C.btnBg, opacity: cargoImage ? 1 : 0.5 },
+          ]}
+          onPress={onLogout}
+          activeOpacity={0.85}
+          disabled={!cargoImage}
+        >
+          <Text style={[s.logoutBtnText, { color: C.btnText }]}>LOGOUT</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -308,48 +299,21 @@ const FinalScreen: React.FC<Props> = ({
 
 const s = StyleSheet.create({
   safe: { flex: 1 },
-  content: {
-    flex: 1,
-    paddingHorizontal: SPACING.xl,
-    paddingTop: 10,
-  },
-
+  content: { flex: 1, paddingHorizontal: SPACING.xl, paddingTop: 10 },
   cameraBox: {
-    height: 220,
+    flex: 1,
+    minHeight: 180,
     borderRadius: RADIUS.lg,
     borderWidth: 1,
-    overflow: 'hidden',
     marginBottom: SPACING.md,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
   },
-  cameraImage: {
-    width: '100%',
-    height: '100%',
-  },
-  cameraOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.1)',
-  },
-
+  cameraImage: { width: '100%', height: '100%' },
   dataCard: {
     paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.lg,
     borderRadius: RADIUS.lg,
     borderWidth: 1,
     marginBottom: SPACING.md,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
   },
   dataRow: {
     flexDirection: 'row',
@@ -357,20 +321,9 @@ const s = StyleSheet.create({
     paddingVertical: 3,
     alignItems: 'center',
   },
-  dataLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  dataValue: {
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-
-  disclaimerWrapper: {
-    paddingHorizontal: SPACING.md,
-  },
+  dataLabel: { fontSize: 13, fontWeight: '600', letterSpacing: 0.5 },
+  dataValue: { fontSize: 13, fontWeight: '800', letterSpacing: 0.5 },
+  disclaimerWrapper: { paddingHorizontal: SPACING.md },
   disclaimer: {
     fontSize: 11,
     fontWeight: '800',
@@ -378,7 +331,6 @@ const s = StyleSheet.create({
     letterSpacing: 0.5,
     lineHeight: 16,
   },
-
   footer: {
     paddingHorizontal: SPACING.xl,
     paddingBottom: SPACING.xl,
@@ -391,43 +343,8 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 16,
     borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
   },
-  logoutBtnText: {
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: 2,
-  },
-  nextBtn: {
-    backgroundColor: '#10B981',
-  },
-
-  // modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.xl,
-  },
-  modalCard: {
-    width: '100%',
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    padding: 0,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-  },
-  modalTitle: { fontSize: 15, fontWeight: '700', letterSpacing: 0.5 },
-  modalActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: SPACING.sm,
-  },
+  logoutBtnText: { fontSize: 14, fontWeight: '800', letterSpacing: 2 },
 });
 
-export default FinalScreen;
+export default CargoPhotoScreen;

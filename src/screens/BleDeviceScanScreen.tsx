@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   TextInput,
   Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
@@ -50,9 +51,17 @@ const BleDeviceScanScreen: React.FC<Props> = ({
     if (isScanning) {
       pulse = Animated.loop(
         Animated.sequence([
-          Animated.timing(pulseAnim, { toValue: 1.2, duration: 800, useNativeDriver: true }),
-          Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-        ])
+          Animated.timing(pulseAnim, {
+            toValue: 1.2,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ]),
       );
       pulse.start();
     } else {
@@ -103,8 +112,8 @@ const BleDeviceScanScreen: React.FC<Props> = ({
       }
 
       if (scannedDevice) {
-        setDevices((prev) => {
-          if (!prev.find((d) => d.id === scannedDevice.id)) {
+        setDevices(prev => {
+          if (!prev.find(d => d.id === scannedDevice.id)) {
             return [...prev, scannedDevice];
           }
           return prev;
@@ -144,8 +153,14 @@ const BleDeviceScanScreen: React.FC<Props> = ({
   };
 
   return (
-    <SafeAreaView style={[s.safeArea, { backgroundColor: C.bg }]} edges={['top', 'bottom']}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={C.bg} />
+    <SafeAreaView
+      style={[s.safeArea, { backgroundColor: C.bg }]}
+      edges={['top', 'bottom']}
+    >
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={C.bg}
+      />
 
       <GlobalHeader
         isDark={isDark}
@@ -155,96 +170,158 @@ const BleDeviceScanScreen: React.FC<Props> = ({
         showLogo={true}
       />
 
-      <View style={s.container}>
-        <View style={s.headerContainer}>
-          <Animated.View style={[s.iconWrapper, { backgroundColor: C.surface, borderColor: C.border, transform: [{ scale: pulseAnim }] }]}>
-            <MaterialIcon name="bluetooth" size={28} color={isScanning ? C.text : C.muted} />
-          </Animated.View>
-          <Text style={[s.title, { color: C.text }]}>SELECT BLE DEVICE</Text>
-          <Text style={[s.subtitle, { color: connectingId ? C.warning : C.muted }]}>{statusText}</Text>
-        </View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View style={s.container}>
+          <View style={s.headerContainer}>
+            <Animated.View
+              style={[
+                s.iconWrapper,
+                {
+                  backgroundColor: C.surface,
+                  borderColor: C.border,
+                  transform: [{ scale: pulseAnim }],
+                },
+              ]}
+            >
+              <MaterialIcon
+                name="bluetooth"
+                size={28}
+                color={isScanning ? C.text : C.muted}
+              />
+            </Animated.View>
+            <Text style={[s.title, { color: C.text }]}>SELECT BLE DEVICE</Text>
+            <Text
+              style={[
+                s.subtitle,
+                { color: connectingId ? C.warning : C.muted },
+              ]}
+            >
+              {statusText}
+            </Text>
+          </View>
 
-        <View style={[s.searchContainer, { backgroundColor: C.surface, borderColor: C.border }]}>
-          <MaterialIcon name="magnify" size={20} color={C.muted} style={s.searchIcon} />
-          <TextInput
-            style={[s.searchInput, { color: C.text }]}
-            placeholder="Search devices..."
-            placeholderTextColor={C.placeholder}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoCapitalize="none"
-            autoCorrect={false}
-            returnKeyType="search"
-            onSubmitEditing={() => Keyboard.dismiss()}
+          <View
+            style={[
+              s.searchContainer,
+              { backgroundColor: C.surface, borderColor: C.border },
+            ]}
+          >
+            <MaterialIcon
+              name="magnify"
+              size={20}
+              color={C.muted}
+              style={s.searchIcon}
+            />
+            <TextInput
+              style={[s.searchInput, { color: C.text }]}
+              placeholder="Search devices..."
+              placeholderTextColor={C.placeholder}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="search"
+              onSubmitEditing={() => Keyboard.dismiss()}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                onPress={() => {
+                  setSearchQuery('');
+                  Keyboard.dismiss();
+                }}
+                style={s.clearBtn}
+              >
+                <MaterialIcon name="close" size={18} color={C.muted} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <FlatList
+            scrollEnabled={false}
+            keyboardShouldPersistTaps="handled"
+            data={devices.filter(device => {
+              const term = searchQuery.toLowerCase();
+              const name = (device.name || 'Unknown Device').toLowerCase();
+              const id = device.id.toLowerCase();
+              return name.includes(term) || id.includes(term);
+            })}
+            keyExtractor={item => item.id}
+            contentContainerStyle={s.listContent}
+            renderItem={({ item }) => (
+              <BleDeviceItem
+                device={item}
+                isDark={isDark}
+                onConnect={connectToDevice}
+                isConnecting={!!connectingId}
+                connectedDeviceId={connectingId}
+              />
+            )}
+            ListEmptyComponent={
+              <View style={s.emptyContainer}>
+                {!isScanning && !connectingId ? (
+                  <Text style={{ color: C.muted, fontSize: 13 }}>
+                    No devices found nearby.
+                  </Text>
+                ) : null}
+              </View>
+            }
           />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => {
-              setSearchQuery('');
-              Keyboard.dismiss();
-            }} style={s.clearBtn}>
-              <MaterialIcon name="close" size={18} color={C.muted} />
+
+          {!connectingId && (
+            <TouchableOpacity
+              style={[s.scanBtn, { backgroundColor: C.btnBg }]}
+              onPress={startScanning}
+              disabled={isScanning}
+              activeOpacity={0.8}
+            >
+              {isScanning ? (
+                <ActivityIndicator
+                  size="small"
+                  color={C.btnText}
+                  style={{ marginRight: 8 }}
+                />
+              ) : (
+                <MaterialIcon
+                  name="radar"
+                  size={18}
+                  color={C.btnText}
+                  style={{ marginRight: 8 }}
+                />
+              )}
+              <Text style={[s.scanBtnText, { color: C.btnText }]}>
+                {isScanning ? 'SCANNING...' : 'RESCAN FOR DEVICES'}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {/* ── DEV SKIP BUTTON (development only) ── */}
+          {__DEV__ && !connectingId && (
+            <TouchableOpacity
+              style={{
+                marginTop: 15,
+                padding: 15,
+                backgroundColor: 'rgba(255,0,0,0.1)',
+                borderRadius: RADIUS.md,
+                borderWidth: 1,
+                borderColor: 'red',
+                alignItems: 'center',
+              }}
+              onPress={() => onDeviceConnected()}
+            >
+              <Text
+                style={{
+                  color: 'red',
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  letterSpacing: 1,
+                }}
+              >
+                SKIP BLE (DEV)
+              </Text>
             </TouchableOpacity>
           )}
         </View>
-
-        <FlatList
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          data={devices.filter((device) => {
-            const term = searchQuery.toLowerCase();
-            const name = (device.name || 'Unknown Device').toLowerCase();
-            const id = device.id.toLowerCase();
-            return name.includes(term) || id.includes(term);
-          })}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={s.listContent}
-          renderItem={({ item }) => (
-            <BleDeviceItem
-              device={item}
-              isDark={isDark}
-              onConnect={connectToDevice}
-              isConnecting={!!connectingId}
-              connectedDeviceId={connectingId}
-            />
-          )}
-          ListEmptyComponent={
-            <View style={s.emptyContainer}>
-              {!isScanning && !connectingId ? (
-                <Text style={{ color: C.muted, fontSize: 13 }}>No devices found nearby.</Text>
-              ) : null}
-            </View>
-          }
-        />
-
-        {!connectingId && (
-          <TouchableOpacity
-            style={[s.scanBtn, { backgroundColor: C.btnBg }]}
-            onPress={startScanning}
-            disabled={isScanning}
-            activeOpacity={0.8}
-          >
-            {isScanning ? (
-              <ActivityIndicator size="small" color={C.btnText} style={{ marginRight: 8 }} />
-            ) : (
-              <MaterialIcon name="radar" size={18} color={C.btnText} style={{ marginRight: 8 }} />
-            )}
-            <Text style={[s.scanBtnText, { color: C.btnText }]}>
-              {isScanning ? 'SCANNING...' : 'RESCAN FOR DEVICES'}
-            </Text>
-          </TouchableOpacity>
-        )}
-
-        {/* ── DEV SKIP BUTTON (development only) ── */}
-        {__DEV__ && !connectingId && (
-          <TouchableOpacity
-            style={{ marginTop: 15, padding: 15, backgroundColor: 'rgba(255,0,0,0.1)', borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'red', alignItems: 'center' }}
-            onPress={() => onDeviceConnected()}
-          >
-            <Text style={{ color: 'red', fontWeight: 'bold', textAlign: 'center', letterSpacing: 1 }}>SKIP BLE (DEV)</Text>
-          </TouchableOpacity>
-        )}
-
-      </View>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 };
@@ -259,7 +336,7 @@ const s = StyleSheet.create({
   },
   headerContainer: {
     alignItems: 'center',
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.md,
   },
   iconWrapper: {
     width: 64,
@@ -268,7 +345,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
   },
   title: {
     fontSize: 16,

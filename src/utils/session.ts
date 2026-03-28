@@ -10,7 +10,10 @@ interface SessionData {
   expiresAt: number;
 }
 
-export const createSession = async (userId: string, flow: FlowType): Promise<void> => {
+export const createSession = async (
+  userId: string,
+  flow: FlowType,
+): Promise<void> => {
   const expiresAt = Date.now() + SESSION_EXPIRATION_MS;
   const data: SessionData = { userId, flow, expiresAt };
   await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(data));

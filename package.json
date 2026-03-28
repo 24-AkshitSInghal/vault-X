@@ -11,7 +11,9 @@
     "clean": "watchman watch-del-all && rm -rf node_modules/.cache && react-native start --reset-cache",
     "clean:android": "cd android && ./gradlew clean && cd ..",
     "clean:ios": "rm -rf ios/build && rm -rf ~/Library/Developer/Xcode/DerivedData && cd ios && pod install && cd ..",
-    "android:clean": "yarn clean:android && react-native run-android"
+    "android:clean": "yarn clean:android && react-native run-android",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^3.0.1",

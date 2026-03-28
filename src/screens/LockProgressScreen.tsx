@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,12 @@ import {
   Animated,
   Easing,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
-import {getTheme, RADIUS, SPACING} from '../constants/colors';
-import {FlowType} from '../constants/credentials';
-import Svg, {Circle} from 'react-native-svg';
-import {GlobalHeader} from '../components/GlobalHeader';
+import { getTheme, RADIUS, SPACING } from '../constants/colors';
+import { FlowType } from '../constants/credentials';
+import Svg, { Circle } from 'react-native-svg';
+import { GlobalHeader } from '../components/GlobalHeader';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface Props {
@@ -26,23 +26,23 @@ interface Props {
 }
 
 const STEPS = [
-  {id: 'init', label: 'Verifying Security Protocol', threshold: 15},
-  {id: 'comm', label: 'Connecting to Lock', threshold: 35},
-  {id: 'mech', label: 'Engaging VaultX Lock', threshold: 60},
-  {id: 'hca', label: 'Operating System Check', threshold: 85},
-  {id: 'final', label: 'Synchronizing Cloud Vault', threshold: 100},
+  { id: 'init', label: 'Verifying Security Protocol', threshold: 15 },
+  { id: 'comm', label: 'Connecting to Lock', threshold: 35 },
+  { id: 'mech', label: 'Engaging VaultX Lock', threshold: 60 },
+  { id: 'hca', label: 'Operating System Check', threshold: 85 },
+  { id: 'final', label: 'Synchronizing Cloud Vault', threshold: 100 },
 ];
 
 // ── Circular Progress Ring ─────────────────────────────────────────────────────
-const CircularProgress = ({progress, C}: {progress: number; C: any}) => {
-  const size = 160;
+const CircularProgress = ({ progress, C }: { progress: number; C: any }) => {
+  const size = 140;
   const strokeWidth = 8;
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
 
   return (
-    <View style={ringSt.container}>
+    <View style={[ringSt.container, { width: size, height: size }]}>
       <Svg width={size} height={size}>
         {/* Background Track */}
         <Circle
@@ -69,16 +69,28 @@ const CircularProgress = ({progress, C}: {progress: number; C: any}) => {
         />
       </Svg>
       <View style={ringSt.center}>
-        <Text style={[ringSt.percent, {color: C.text}]}>{Math.round(progress)}</Text>
-        <Text style={[ringSt.percentSymbol, {color: C.muted}]}>%</Text>
+        <Text style={[ringSt.percent, { color: C.text }]}>
+          {Math.round(progress)}
+        </Text>
+        <Text style={[ringSt.percentSymbol, { color: C.muted }]}>%</Text>
       </View>
     </View>
   );
 };
 
 const ringSt = StyleSheet.create({
-  container: {width: 160, height: 160, alignItems: 'center', justifyContent: 'center'},
-  ringBase: {width: 160, height: 160, alignItems: 'center', justifyContent: 'center'},
+  container: {
+    width: 160,
+    height: 160,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ringBase: {
+    width: 160,
+    height: 160,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   segment: {
     position: 'absolute',
     width: 6,
@@ -91,12 +103,12 @@ const ringSt = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'baseline',
   },
-  percent: {fontSize: 44, fontWeight: '900'},
-  percentSymbol: {fontSize: 16, fontWeight: '700', marginLeft: 2},
+  percent: { fontSize: 44, fontWeight: '900' },
+  percentSymbol: { fontSize: 16, fontWeight: '700', marginLeft: 2 },
 });
 
 // ── Step Row ──────────────────────────────────────────────────────────────────
-const StepRow = ({label, status, timestamp, percent, C}: any) => {
+const StepRow = ({ label, status, timestamp, percent, C }: any) => {
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -111,20 +123,55 @@ const StepRow = ({label, status, timestamp, percent, C}: any) => {
   const isDone = status === 'done';
 
   return (
-    <Animated.View style={[sr.container, {opacity, backgroundColor: C.surface, borderColor: isActive ? C.text : C.border}]}>
-      <View style={[sr.indicator, {backgroundColor: isDone ? '#10B981' : isActive ? C.text : C.borderLight}]}>
+    <Animated.View
+      style={[
+        sr.container,
+        {
+          opacity,
+          backgroundColor: C.surface,
+          borderColor: isActive ? C.text : C.border,
+        },
+      ]}
+    >
+      <View
+        style={[
+          sr.indicator,
+          {
+            backgroundColor: isDone
+              ? '#10B981'
+              : isActive
+              ? C.text
+              : C.borderLight,
+          },
+        ]}
+      >
         {isDone ? (
           <MaterialIcon name="check" size={14} color="#FFFFFF" />
         ) : (
-          <View style={[sr.dot, {backgroundColor: isActive ? '#10B981' : 'transparent'}]} />
+          <View
+            style={[
+              sr.dot,
+              { backgroundColor: isActive ? '#10B981' : 'transparent' },
+            ]}
+          />
         )}
       </View>
       <View style={sr.content}>
-        <Text style={[sr.label, {color: isActive || isDone ? C.text : C.muted}]}>{label}</Text>
+        <Text
+          style={[sr.label, { color: isActive || isDone ? C.text : C.muted }]}
+        >
+          {label}
+        </Text>
         <View style={sr.meta}>
-          <Text style={[sr.timestamp, {color: C.muted}]}>{timestamp || '--:--:--'}</Text>
+          <Text style={[sr.timestamp, { color: C.muted }]}>
+            {timestamp || '--:--:--'}
+          </Text>
           {percent !== undefined && (
-            <Text style={[sr.percentTag, {color: isDone ? '#10B981' : C.muted}]}>{percent}% Complete</Text>
+            <Text
+              style={[sr.percentTag, { color: isDone ? '#10B981' : C.muted }]}
+            >
+              {percent}% Complete
+            </Text>
           )}
         </View>
       </View>
@@ -135,10 +182,11 @@ const StepRow = ({label, status, timestamp, percent, C}: any) => {
 const sr = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    padding: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     borderRadius: 16,
     borderWidth: 1,
-    marginBottom: 8,
+    marginBottom: 6,
     alignItems: 'center',
   },
   indicator: {
@@ -149,16 +197,23 @@ const sr = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 16,
   },
-  dot: {width: 8, height: 8, borderRadius: 4},
-  content: {flex: 1},
-  label: {fontSize: 14, fontWeight: '600', letterSpacing: 0.5},
-  meta: {flexDirection: 'row', justifyContent: 'space-between', marginTop: 4},
-  timestamp: {fontSize: 11, fontVariant: ['tabular-nums']},
-  percentTag: {fontSize: 11, fontWeight: '700'},
+  dot: { width: 8, height: 8, borderRadius: 4 },
+  content: { flex: 1 },
+  label: { fontSize: 14, fontWeight: '600', letterSpacing: 0.5 },
+  meta: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
+  timestamp: { fontSize: 11, fontVariant: ['tabular-nums'] },
+  percentTag: { fontSize: 11, fontWeight: '700' },
 });
 
 // ── Main Screen ───────────────────────────────────────────────────────────────
-const LockProgressScreen: React.FC<Props> = ({isDark, flow, selection, onWarning, onLogout, onToggleTheme}) => {
+const LockProgressScreen: React.FC<Props> = ({
+  isDark,
+  flow,
+  selection,
+  onWarning,
+  onLogout,
+  onToggleTheme,
+}) => {
   const C = getTheme(isDark);
   const [progress, setProgress] = useState(0);
   const [stepData, setStepData] = useState<any[]>([]);
@@ -179,14 +234,19 @@ const LockProgressScreen: React.FC<Props> = ({isDark, flow, selection, onWarning
         const next = Math.min(p + 0.5, 100);
 
         // Check for step thresholds
-        const currentStepIdx = STEPS.findIndex(s => next >= s.threshold && p < s.threshold);
+        const currentStepIdx = STEPS.findIndex(
+          s => next >= s.threshold && p < s.threshold,
+        );
         if (currentStepIdx !== -1) {
           const step = STEPS[currentStepIdx];
-          setStepData(prev => [...prev, {
-            id: step.id,
-            timestamp: getTimestamp(),
-            percent: step.threshold
-          }]);
+          setStepData(prev => [
+            ...prev,
+            {
+              id: step.id,
+              timestamp: getTimestamp(),
+              percent: step.threshold,
+            },
+          ]);
         }
 
         // Complete flow at 100%
@@ -206,19 +266,19 @@ const LockProgressScreen: React.FC<Props> = ({isDark, flow, selection, onWarning
   const activeStepIdx = STEPS.findIndex(s => progress < s.threshold);
 
   return (
-    <SafeAreaView style={[s.safe, {backgroundColor: C.bg}]}>
+    <SafeAreaView style={[s.safe, { backgroundColor: C.bg }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
-      <GlobalHeader 
-        isDark={isDark} 
-        onToggleTheme={onToggleTheme} 
-        onLogout={onLogout} 
+      <GlobalHeader
+        isDark={isDark}
+        onToggleTheme={onToggleTheme}
+        onLogout={onLogout}
       />
 
       <View style={s.container}>
         <View style={s.ringWrapper}>
           <CircularProgress progress={progress} C={C} />
-          <Text style={[s.subLabel, {color: C.muted}]}>
+          <Text style={[s.subLabel, { color: C.muted }]}>
             {flow.toUpperCase()}ING {selection.toUpperCase()}...
           </Text>
         </View>
@@ -226,8 +286,13 @@ const LockProgressScreen: React.FC<Props> = ({isDark, flow, selection, onWarning
         <View style={s.stepsList}>
           {STEPS.map((step, idx) => {
             const data = stepData.find(d => d.id === step.id);
-            const status = progress >= step.threshold ? 'done' : idx === activeStepIdx ? 'active' : 'pending';
-            
+            const status =
+              progress >= step.threshold
+                ? 'done'
+                : idx === activeStepIdx
+                ? 'active'
+                : 'pending';
+
             return (
               <StepRow
                 key={step.id}
@@ -246,7 +311,7 @@ const LockProgressScreen: React.FC<Props> = ({isDark, flow, selection, onWarning
 };
 
 const s = StyleSheet.create({
-  safe: {flex: 1},
+  safe: { flex: 1 },
   header: {
     paddingHorizontal: 20,
     paddingVertical: 15,
@@ -254,7 +319,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  headerTitle: {fontSize: 13, fontWeight: '800', letterSpacing: 2},
+  headerTitle: { fontSize: 13, fontWeight: '800', letterSpacing: 2 },
   backBtn: {
     width: 40,
     height: 40,
@@ -262,10 +327,20 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  container: {flex: 1, paddingHorizontal: 24, justifyContent: 'center'},
-  ringWrapper: {alignItems: 'center', marginBottom: 20},
-  subLabel: {marginTop: 15, fontSize: 12, fontWeight: '700', letterSpacing: 3},
-  stepsList: {width: '100%'},
+  container: {
+    flex: 1,
+    paddingHorizontal: 24,
+    justifyContent: 'center',
+    paddingBottom: 10,
+  },
+  ringWrapper: { alignItems: 'center', marginBottom: 15 },
+  subLabel: {
+    marginTop: 15,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 3,
+  },
+  stepsList: { width: '100%' },
 });
 
 export default LockProgressScreen;

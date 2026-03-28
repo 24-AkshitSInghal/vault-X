@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Modal,
 } from 'react-native';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
-import {getTheme, RADIUS, SPACING} from '../constants/colors';
+import { getTheme, RADIUS, SPACING } from '../constants/colors';
 
 interface HeaderProps {
   isDark: boolean;
@@ -29,21 +29,33 @@ export const GlobalHeader: React.FC<HeaderProps> = ({
   const [logoutModal, setLogoutModal] = useState(false);
 
   return (
-    <View style={[s.topBar, {backgroundColor: 'transparent'}]}>
+    <View style={[s.topBar, { backgroundColor: 'transparent' }]}>
       {/* Light/Dark Toggle (Left) */}
       <TouchableOpacity
-        style={[s.iconBtn, {backgroundColor: C.surface, borderColor: C.border}]}
+        style={[
+          s.iconBtn,
+          { backgroundColor: C.surface, borderColor: C.border },
+        ]}
         onPress={onToggleTheme}
-        activeOpacity={0.8}>
-        <MaterialIcon name={isDark ? 'weather-sunny' : 'weather-night'} size={18} color={C.subText} />
+        activeOpacity={0.8}
+      >
+        <MaterialIcon
+          name={isDark ? 'weather-sunny' : 'weather-night'}
+          size={18}
+          color={C.subText}
+        />
       </TouchableOpacity>
 
       {/* Mid Vault Logo (Center) */}
       <View style={s.logoWrapper}>
         {showLogo && (
-          <Image 
-            source={isDark ? require('../../assets/white-logo.png') : require('../../assets/black-logo.png')} 
-            style={s.logoImg} 
+          <Image
+            source={
+              isDark
+                ? require('../../assets/white-logo.png')
+                : require('../../assets/black-logo.png')
+            }
+            style={s.logoImg}
           />
         )}
       </View>
@@ -51,13 +63,17 @@ export const GlobalHeader: React.FC<HeaderProps> = ({
       {/* Logout Button (Right) */}
       {showLogout ? (
         <TouchableOpacity
-          style={[s.iconBtn, {backgroundColor: C.surface, borderColor: C.border}]}
+          style={[
+            s.iconBtn,
+            { backgroundColor: C.surface, borderColor: C.border },
+          ]}
           onPress={() => setLogoutModal(true)}
-          activeOpacity={0.8}>
+          activeOpacity={0.8}
+        >
           <MaterialIcon name="logout-variant" size={16} color={C.subText} />
         </TouchableOpacity>
       ) : (
-        <View style={{width: 40}} />
+        <View style={{ width: 40 }} />
       )}
 
       {/* Logout Confirmation Modal */}
@@ -65,30 +81,77 @@ export const GlobalHeader: React.FC<HeaderProps> = ({
         visible={logoutModal}
         transparent
         animationType="fade"
-        onRequestClose={() => setLogoutModal(false)}>
+        onRequestClose={() => setLogoutModal(false)}
+      >
         <View style={s.modalOverlay}>
-          <View style={[s.modalCard, {backgroundColor: C.surface, borderColor: C.border}]}>
-            <View style={{backgroundColor: C.surfaceHigh, paddingVertical: 12, paddingHorizontal: 16, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg }}>
-              <Text style={[s.modalTitle, {color: C.text, marginBottom: 0}]}>Sign Out</Text>
+          <View
+            style={[
+              s.modalCard,
+              { backgroundColor: C.surface, borderColor: C.border },
+            ]}
+          >
+            <View
+              style={{
+                backgroundColor: C.surfaceHigh,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                borderTopLeftRadius: RADIUS.lg,
+                borderTopRightRadius: RADIUS.lg,
+              }}
+            >
+              <Text style={[s.modalTitle, { color: C.text, marginBottom: 0 }]}>
+                Sign Out
+              </Text>
             </View>
 
-            <View style={{padding: SPACING.lg}}>
-              <Text style={{color: C.subText, fontSize: 13, lineHeight: 22, marginTop: 4, marginBottom: 20}}>
+            <View style={{ padding: SPACING.lg }}>
+              <Text
+                style={{
+                  color: C.subText,
+                  fontSize: 13,
+                  lineHeight: 22,
+                  marginTop: 4,
+                  marginBottom: 20,
+                }}
+              >
                 Are you sure you want to sign out?
               </Text>
 
               <View style={s.modalActions}>
-                <TouchableOpacity onPress={() => setLogoutModal(false)} activeOpacity={0.7} style={{paddingVertical: 10, paddingHorizontal: 15}}>
-                  <Text style={{color: C.muted, fontSize: 13, fontWeight: '700', letterSpacing: 1}}>CANCEL</Text>
+                <TouchableOpacity
+                  onPress={() => setLogoutModal(false)}
+                  activeOpacity={0.7}
+                  style={{ paddingVertical: 10, paddingHorizontal: 15 }}
+                >
+                  <Text
+                    style={{
+                      color: C.muted,
+                      fontSize: 13,
+                      fontWeight: '700',
+                      letterSpacing: 1,
+                    }}
+                  >
+                    CANCEL
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => {
                     setLogoutModal(false);
                     onLogout();
-                  }} 
-                  activeOpacity={0.7} 
-                  style={{paddingVertical: 10, paddingHorizontal: 15}}>
-                  <Text style={{color: C.danger, fontSize: 13, fontWeight: '800', letterSpacing: 1}}>SIGN OUT</Text>
+                  }}
+                  activeOpacity={0.7}
+                  style={{ paddingVertical: 10, paddingHorizontal: 15 }}
+                >
+                  <Text
+                    style={{
+                      color: C.danger,
+                      fontSize: 13,
+                      fontWeight: '800',
+                      letterSpacing: 1,
+                    }}
+                  >
+                    SIGN OUT
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -143,10 +206,14 @@ const s = StyleSheet.create({
     padding: 0,
     elevation: 8,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
   },
-  modalTitle:   {fontSize: 15, fontWeight: '700', letterSpacing: 0.5},
-  modalActions: {flexDirection: 'row', justifyContent: 'flex-end', gap: SPACING.sm},
+  modalTitle: { fontSize: 15, fontWeight: '700', letterSpacing: 0.5 },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: SPACING.sm,
+  },
 });

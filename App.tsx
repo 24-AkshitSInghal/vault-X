@@ -2,29 +2,42 @@
  * VaultX — Dock Container Lock/Unlock App
  */
 
-import React, {useState, useEffect} from 'react';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
-import OtpLoginScreen      from './src/screens/OtpLoginScreen';
+import React, { useState, useEffect } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import OtpLoginScreen from './src/screens/OtpLoginScreen';
 import LockDashboardScreen from './src/screens/LockDashboardScreen';
-import LockProgressScreen  from './src/screens/LockProgressScreen';
-import LockWarningScreen   from './src/screens/LockWarningScreen';
+import LockProgressScreen from './src/screens/LockProgressScreen';
+import LockWarningScreen from './src/screens/LockWarningScreen';
 import ActionDashboardScreen from './src/screens/ActionDashboardScreen';
-import OpenWarningScreen   from './src/screens/OpenWarningScreen';
-import OpenProgressScreen  from './src/screens/OpenProgressScreen';
-import FinalScreen         from './src/screens/FinalScreen';
+import OpenWarningScreen from './src/screens/OpenWarningScreen';
+import OpenProgressScreen from './src/screens/OpenProgressScreen';
+import FinalScreen from './src/screens/FinalScreen';
+import CargoPhotoScreen from './src/screens/CargoPhotoScreen';
 import BleDeviceScanScreen from './src/screens/BleDeviceScanScreen';
-import {FlowType}          from './src/constants/credentials';
-import {createSession, getSession, clearSession} from './src/utils/session';
+import { FlowType } from './src/constants/credentials';
+import { createSession, getSession, clearSession } from './src/utils/session';
 
-type Screen = 'login' | 'bleScan' | 'dashboard' | 'lockProgress' | 'lockWarning' | 'actionDashboard' | 'openWarning' | 'openProgress' | 'final';
+type Screen =
+  | 'login'
+  | 'bleScan'
+  | 'dashboard'
+  | 'lockProgress'
+  | 'lockWarning'
+  | 'actionDashboard'
+  | 'openWarning'
+  | 'openProgress'
+  | 'final'
+  | 'cargoPhoto';
 
 function App(): React.JSX.Element {
-  const [isDark,     setIsDark]     = useState(true);
-  const [screen,     setScreen]     = useState<Screen>('login');
-  const [flow,       setFlow]       = useState<FlowType>('lock');
-  const [selection,  setSelection]  = useState<'container' | 'trailer'>('container');
+  const [isDark, setIsDark] = useState(true);
+  const [screen, setScreen] = useState<Screen>('login');
+  const [flow, setFlow] = useState<FlowType>('lock');
+  const [selection, setSelection] = useState<'container' | 'trailer'>(
+    'container',
+  );
   const [containerNum, setContainerNum] = useState<string>('');
-  const [sealNum,      setSealNum]      = useState<string>('');
+  const [sealNum, setSealNum] = useState<string>('');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [userId, setUserId] = useState<string>('');
   const [isCheckingSession, setIsCheckingSession] = useState(true);
@@ -56,10 +69,10 @@ function App(): React.JSX.Element {
         <OtpLoginScreen
           isDark={isDark}
           onToggleTheme={toggleTheme}
-          onLoginSuccess={async (f: FlowType, uid: string) => { 
+          onLoginSuccess={async (f: FlowType, uid: string) => {
             await createSession(uid, f);
             setUserId(uid);
-            setFlow(f); 
+            setFlow(f);
             setScreen('bleScan');
           }}
         />
@@ -87,7 +100,10 @@ function App(): React.JSX.Element {
           flow={flow}
           onToggleTheme={toggleTheme}
           onLogout={handleLogout}
-          onProceed={sel => { setSelection(sel); setScreen('lockProgress'); }}
+          onProceed={sel => {
+            setSelection(sel);
+            setScreen('lockProgress');
+          }}
         />
       )}
 
@@ -119,9 +135,9 @@ function App(): React.JSX.Element {
           flow={flow}
           selection={selection}
           userId={userId}
-          onOpen={(cNum, sNum, imgUri) => { 
-            setContainerNum(cNum); 
-            setSealNum(sNum); 
+          onOpen={(cNum, sNum, imgUri) => {
+            setContainerNum(cNum);
+            setSealNum(sNum);
             if (imgUri) setCapturedImage(imgUri);
             if (flow === 'open') {
               setScreen('openWarning');
@@ -161,6 +177,18 @@ function App(): React.JSX.Element {
           containerNum={containerNum}
           sealNum={sealNum}
           capturedImage={capturedImage}
+          userId={userId}
+          onLogout={handleLogout}
+          onNext={() => setScreen('cargoPhoto')}
+          onToggleTheme={toggleTheme}
+        />
+      )}
+
+      {screen === 'cargoPhoto' && (
+        <CargoPhotoScreen
+          isDark={isDark}
+          containerNum={containerNum}
+          sealNum={sealNum}
           userId={userId}
           onLogout={handleLogout}
           onToggleTheme={toggleTheme}

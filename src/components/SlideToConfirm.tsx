@@ -1,39 +1,54 @@
-import React, {useRef} from 'react';
-import {View, Animated, PanResponder, StyleSheet} from 'react-native';
+import React, { useRef } from 'react';
+import { View, Animated, PanResponder, StyleSheet } from 'react-native';
 import MaterialIcon from '@react-native-vector-icons/material-design-icons';
 
 const THUMB_SIZE = 54;
 
 export interface SlideProps {
-  label:      string;
-  onConfirm:  () => void;
+  label: string;
+  onConfirm: () => void;
   thumbColor: string;
-  textColor:  string;
-  trackBg:    string;
-  isDark:     boolean;
+  textColor: string;
+  trackBg: string;
+  isDark: boolean;
 }
 
-export const SlideToConfirm = ({label, onConfirm, thumbColor, textColor, trackBg, isDark}: SlideProps) => {
-  const thumbX    = useRef(new Animated.Value(0)).current;
-  const trackW    = useRef(0);
+export const SlideToConfirm = ({
+  label,
+  onConfirm,
+  thumbColor,
+  textColor,
+  trackBg,
+  isDark,
+}: SlideProps) => {
+  const thumbX = useRef(new Animated.Value(0)).current;
+  const trackW = useRef(0);
   const confirmed = useRef(false);
 
   const pan = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder:  () => true,
+      onMoveShouldSetPanResponder: () => true,
       onPanResponderMove: (_, gs) => {
-        if (confirmed.current) {return;}
-        const max     = trackW.current - THUMB_SIZE - 8;
+        if (confirmed.current) {
+          return;
+        }
+        const max = trackW.current - THUMB_SIZE - 8;
         const clamped = Math.max(0, Math.min(gs.dx, max));
         thumbX.setValue(clamped);
       },
       onPanResponderRelease: (_, gs) => {
-        if (confirmed.current) {return;}
+        if (confirmed.current) {
+          return;
+        }
         const max = trackW.current - THUMB_SIZE - 8;
         if (gs.dx >= max * 0.75) {
           confirmed.current = true;
-          Animated.timing(thumbX, {toValue: max, duration: 150, useNativeDriver: false}).start(() => {
+          Animated.timing(thumbX, {
+            toValue: max,
+            duration: 150,
+            useNativeDriver: false,
+          }).start(() => {
             onConfirm();
             setTimeout(() => {
               confirmed.current = false;
@@ -65,39 +80,46 @@ export const SlideToConfirm = ({label, onConfirm, thumbColor, textColor, trackBg
 
   return (
     <View
-      style={[slSt.track, {backgroundColor: trackBg}]}
-      onLayout={e => { trackW.current = e.nativeEvent.layout.width; }}>
-      
+      style={[slSt.track, { backgroundColor: trackBg }]}
+      onLayout={e => {
+        trackW.current = e.nativeEvent.layout.width;
+      }}
+    >
       {/* Dynamic Progress Fill */}
-      <Animated.View 
+      <Animated.View
         style={[
-          slSt.progressFill, 
-          { 
+          slSt.progressFill,
+          {
             width: progressWidth,
-            backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
-          }
-        ]} 
+            backgroundColor: isDark
+              ? 'rgba(255,255,255,0.08)'
+              : 'rgba(0,0,0,0.08)',
+          },
+        ]}
       />
 
-      <Animated.Text style={[slSt.label, {color: textColor, opacity: textOpacity}]}>
+      <Animated.Text
+        style={[slSt.label, { color: textColor, opacity: textOpacity }]}
+      >
         {label}
       </Animated.Text>
 
       <Animated.View
         style={[
-          slSt.thumb, 
+          slSt.thumb,
           {
-            backgroundColor: thumbColor, 
-            transform: [{translateX: thumbX}],
+            backgroundColor: thumbColor,
+            transform: [{ translateX: thumbX }],
             shadowColor: thumbColor,
             elevation: 8,
-          }
+          },
         ]}
-        {...pan.panHandlers}>
-        <MaterialIcon 
-          name="chevron-double-right" 
-          size={24} 
-          color={isDark ? '#000' : '#fff'} 
+        {...pan.panHandlers}
+      >
+        <MaterialIcon
+          name="chevron-double-right"
+          size={24}
+          color={isDark ? '#000' : '#fff'}
         />
       </Animated.View>
     </View>
@@ -138,7 +160,7 @@ const slSt = StyleSheet.create({
     position: 'absolute',
     left: 5,
     zIndex: 2,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
