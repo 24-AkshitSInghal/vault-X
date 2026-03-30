@@ -25,6 +25,9 @@ export const SlideToConfirm = ({
   const trackW = useRef(0);
   const confirmed = useRef(false);
 
+  const onConfirmRef = useRef(onConfirm);
+  onConfirmRef.current = onConfirm;
+
   const pan = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -49,7 +52,7 @@ export const SlideToConfirm = ({
             duration: 150,
             useNativeDriver: false,
           }).start(() => {
-            onConfirm();
+            onConfirmRef.current();
             setTimeout(() => {
               confirmed.current = false;
               thumbX.setValue(0);

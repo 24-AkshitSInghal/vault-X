@@ -315,7 +315,7 @@ const s = StyleSheet.create({
   },
 
   cameraBox: {
-    height: 220,
+    height: 210,
     borderRadius: RADIUS.lg,
     borderWidth: 1,
     overflow: 'hidden',
@@ -372,7 +372,7 @@ const s = StyleSheet.create({
     paddingHorizontal: SPACING.md,
   },
   disclaimer: {
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: '800',
     textAlign: 'center',
     letterSpacing: 0.5,
